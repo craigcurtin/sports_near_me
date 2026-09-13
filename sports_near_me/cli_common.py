@@ -25,6 +25,33 @@ except ImportError:  # pragma: no cover
 DEFAULT_CONFIG_PATH = Path.home() / ".sports_near_me.yaml"
 LOG_LEVEL_CHOICES = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
+# Written to DEFAULT_CONFIG_PATH the first time anyone runs this with no
+# config file present and no --config given - see
+# _create_default_config_file(). A real, runnable starter list rather than
+# an empty file, so a first run shows something instead of an error asking
+# for a team.
+DEFAULT_CONFIG_CONTENTS = """\
+# Auto-created by sports-game - no config file existed yet at this path,
+# so this one was generated with a starter follow list. Edit the teams
+# below to your own favorites; see config.example.yaml in the project
+# source for the full format (conferences, more sports, tz/logging
+# options, etc.).
+
+follow:
+  nfl:
+    teams: [Bears]
+  mlb:
+    teams: [Cubs]
+  nhl:
+    teams: [Blackhawks]
+  ncaamb:
+    teams: [Tennessee, Wisconsin]
+  ncaawb:
+    teams: [Tennessee, Wisconsin]
+  ncaavbw:
+    teams: [Tennessee, Wisconsin]
+"""
+
 # Every flag defaults to None (not this dict's value) on the argparse side -
 # that's what lets resolve_settings() tell "user didn't pass this" apart
 # from "user explicitly chose the default."
@@ -101,12 +128,31 @@ def load_config_file(path: Path) -> dict:
         return yaml.safe_load(f) or {}
 
 
+def _create_default_config_file(path: Path) -> bool:
+    """Writes DEFAULT_CONFIG_CONTENTS to `path` if nothing's there yet.
+    Only ever called for the DEFAULT config path (never for an explicit
+    --config, which staying missing is a real error - see
+    resolve_settings()). Returns whether it actually created the file, so
+    the caller can tell the user - failures here (e.g. an unwritable home
+    directory) are non-fatal: resolve_settings() falls back to an empty
+    follow list rather than crashing the whole run over a bootstrap step."""
+    try:
+        path.write_text(DEFAULT_CONFIG_CONTENTS)
+        return True
+    except OSError as e:
+        logger.warning(f"Couldn't create a default config at {path}: {e}")
+        return False
+
+
 def resolve_settings(args: argparse.Namespace) -> dict:
     """Merges DEFAULTS <- config file (if one exists) <- CLI flags (CLI
     always wins). An explicitly-passed --config that doesn't exist is an
-    error worth surfacing; the default path silently existing-or-not is
-    fine, since most people won't have created it yet."""
+    error worth surfacing; the DEFAULT path not existing yet is instead
+    treated as a first run - a starter config is created there (see
+    _create_default_config_file()) and used immediately, so this run
+    isn't left with an empty follow list either."""
     settings = dict(DEFAULTS)
+    settings["_config_created"] = False
 
     config_arg = getattr(args, "config", None)
     config_path = Path(config_arg).expanduser() if config_arg else DEFAULT_CONFIG_PATH
@@ -116,6 +162,12 @@ def resolve_settings(args: argparse.Namespace) -> dict:
         settings["_config_path"] = str(config_path)
     elif config_arg:
         raise FileNotFoundError(f"Config file not found: {config_path}")
+    elif _create_default_config_file(config_path):
+        # Load what was just written and use it THIS run too, rather than
+        # creating a file nobody sees the effect of until the next run.
+        config = load_config_file(config_path)
+        settings["_config_path"] = str(config_path)
+        settings["_config_created"] = True
     else:
         settings["_config_path"] = None
 

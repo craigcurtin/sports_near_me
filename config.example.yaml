@@ -12,22 +12,23 @@ log_level: INFO
 
 follow:
   nfl:
-    teams: [Bears, Packers]
+    teams: [Bears]
   mlb:
-    teams: [Cubs]
+    teams: [Cubs, Brewers]
   nhl:
     teams: [Blackhawks]
   ncaaf:
-    teams: [Notre Dame]       # independent - not in any conference
+    #teams: [Notre Dame]       # independent - not in any conference
+    teams: [Tennessee]
     conferences: [SEC, Big Ten]   # Big Ten includes Wisconsin - no need to list it separately
   ncaamb:
-    conferences: [ACC]         # every ACC men's basketball team, e.g. Duke
+    conferences: [SEC]
   ncaawb:
-    teams: [Duke, Wisconsin]
+    teams: [Tennessee, Wisconsin]
   ncaamh:
     teams: [Wisconsin]
   ncaavbw:
-    teams: [Wisconsin]          # women's volleyball - Wisconsin doesn't field a men's team
+    teams: [Wisconsin, Tennessee]          # women's volleyball - Wisconsin doesn't field a men's team
   # ncaabsb, ncaavbm work the same way (teams: / conferences:)
 
 # Run "sports-game" alone to see every team/conference above, one game each.

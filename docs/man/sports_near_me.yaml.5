@@ -19,8 +19,20 @@ by default, or at the path given with
 .B \-\-config
 flag. Passing
 .B \-\-config
-with a path that does not exist is an error; the default path silently
-not existing is not \(em most people will not have created it yet.
+with a path that does not exist is an error.
+.PP
+.B If the default path does not exist, it is created automatically
+with a small starter
+.B follow:
+list (NFL Bears, MLB Cubs, NHL Blackhawks, and Tennessee + Wisconsin
+across men's basketball, women's basketball, and women's volleyball)
+and used immediately for that run \(em
+.B sports-game
+prints a message saying it did this. This only happens for the
+.I default
+path; an explicitly-passed
+.B \-\-config
+that is missing is still a real error, never silently created.
 .SH SHARED KEYS
 .TP
 .B tz

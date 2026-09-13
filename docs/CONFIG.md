@@ -9,8 +9,18 @@ line.
 
 The file is looked up at `~/.sports_near_me.yaml` by default, or at the
 path given with `sports-game`'s `--config` flag. Passing `--config` with a
-path that doesn't exist is an error; the default path silently not
-existing is not — most people won't have created it yet.
+path that doesn't exist is an error.
+
+**If the default path doesn't exist, it's created automatically** with a
+small starter `follow:` list (NFL Bears, MLB Cubs, NHL Blackhawks, and
+Tennessee + Wisconsin across men's basketball, women's basketball, and
+women's volleyball) and used immediately for that run — `sports-game`
+prints a message saying it did this. This only happens for the *default*
+path; an explicitly-passed `--config` that's missing is still a real
+error, never silently created. Edit the generated file (or copy
+[`config.example.yaml`](../config.example.yaml) over it) to set your own
+teams — see [README.md](../README.md#follow-a-list-not-just-one-team) for
+the full walkthrough.
 
 ## Shared keys
 

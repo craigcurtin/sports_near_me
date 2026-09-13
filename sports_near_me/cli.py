@@ -186,7 +186,18 @@ def run(argv=None) -> int:
         return 1
 
     configure_logging(settings)
-    if settings["_config_path"]:
+    if settings.get("_config_created"):
+        # Always visible, even under --silent - creating a file on
+        # someone's machine is worth surfacing every time, not just as a
+        # routine diagnostic. Explicit CLI args (a sport/team given
+        # directly) still completely bypass this file's follow list for
+        # the current run - it only supplies defaults for the
+        # no-team/no-sport "show everything I follow" invocations.
+        print(f"No config file found - created one with a starter team "
+              f"list at {settings['_config_path']}. Edit that file (or "
+              f"pass --config to use a different one) to set your own "
+              f"teams.", file=sys.stderr)
+    elif settings["_config_path"]:
         logger.info(f"Loaded config from {settings['_config_path']}")
 
     sports_to_run = [args.sport] if args.sport else list(settings["_follow"].keys())

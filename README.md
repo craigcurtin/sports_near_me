@@ -63,9 +63,15 @@ rather than a guess.
 
 ## Follow a list, not just one team
 
-This is the part you'll actually want to set up once and reuse - **copy
-the example config, then edit it to list *your* teams**, not the ones in
-the example:
+This is the part you'll actually want to set up once and reuse. **You
+don't strictly have to do anything** - the first time you run
+`sports-game` with no config file present, it creates
+`~/.sports_near_me.yaml` for you automatically, with a small starter
+list (Bears, Cubs, Blackhawks, and Tennessee/Wisconsin across a few NCAA
+sports) and tells you it did so. But that starter list is almost
+certainly not *your* teams, so the real setup is: **copy the example
+config, then edit it to list *your* teams**, not the ones in the
+example:
 
 **1. Copy the example file to `~/.sports_near_me.yaml`:**
 
