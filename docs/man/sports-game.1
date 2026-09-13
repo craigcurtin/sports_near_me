@@ -24,11 +24,16 @@ and
 .I team
 for one specific lookup. The
 .I team
-argument also accepts a comma-separated list (
-.BR "tennessee,wisconsin" )
-to look up several teams in one run without a config file \(em each name
-resolves through the same rules as a single-team lookup, and the result
-is deduplicated by resolved team. Run with just a
+argument also accepts several teams to look up in one run without a
+config file \(em
+.BR tennessee,wisconsin ,
+.BR "tennessee, wisconsin" " (space after the comma - no quoting needed;"
+every shell token after the sport is rejoined before splitting), or even
+.B "tennessee wisconsin"
+(no comma at all) all work identically. Quoting is never required, just
+occasionally convenient. Each name resolves through the same rules as a
+single-team lookup, and the result is deduplicated by resolved team.
+Run with just a
 .I sport
 to show every team (and every team in every followed conference) from
 your config file's follow list for that sport. Run with

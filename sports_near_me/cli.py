@@ -29,10 +29,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="sport", metavar="{" + ",".join(LEAGUES) + "}")
     for name in LEAGUES:
         sub = subparsers.add_parser(name, help=name.upper())
-        sub.add_argument("team", nargs="?", default=None,
-                          help="A specific team, or a comma-separated list (e.g. "
-                               "'tennessee,wisconsin') - overrides your config's follow "
-                               "list for this run.")
+        sub.add_argument("team", nargs="*", default=None,
+                          help="A specific team, or several - as 'tennessee,wisconsin', "
+                               "'tennessee, wisconsin' (space after the comma is fine "
+                               "unquoted too), or plain separate words. Overrides your "
+                               "config's follow list for this run.")
         add_shared_flags(sub)
     return parser
 
@@ -204,8 +205,17 @@ def run(argv=None) -> int:
 
         explicit_team = args.sport and getattr(args, "team", None)
         if explicit_team:
+            # "team" collects every shell token after the sport (nargs="*"),
+            # not just one - joined with "," before splitting again in
+            # _resolve_explicit_teams() so "cubs, brewers" (space after the
+            # comma, unquoted) works exactly like "cubs,brewers" or a
+            # properly quoted "cubs, brewers": the shell splits the
+            # unquoted form into two tokens ("cubs," and "brewers"), and
+            # rejoining with "," turns that back into one team list
+            # instead of an argparse "unrecognized arguments" error.
+            raw = ",".join(args.team)
             try:
-                teams = _resolve_explicit_teams(league, args.team)
+                teams = _resolve_explicit_teams(league, raw)
             except ValueError as e:
                 print(f"error: {e}", file=sys.stderr)
                 return 1

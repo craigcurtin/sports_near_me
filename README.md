@@ -36,8 +36,10 @@ Audio:   None listed in ESPN's data - that's a known gap, not evidence there isn
 More at: https://www.espn.com/mlb/game/_/gameId/401816927/reds-brewers
 ```
 
-A single run can look up several teams at once - just comma-separate
-them (`"cubs,brewers"` above).
+A single run can look up several teams at once - `cubs,brewers`,
+`cubs, brewers` (space after the comma is fine unquoted too), or even
+`cubs brewers` (no comma at all) all work identically. Quoting is never
+required, just occasionally convenient.
 
 Ten leagues, one tool: **NFL, MLB, NHL, NCAA football, NCAA men's/women's
 basketball, NCAA baseball, NCAA men's hockey, NCAA men's/women's volleyball.**
@@ -51,9 +53,13 @@ sports-game ncaamh wisconsin
 ```
 
 Team names resolve loosely - a nickname, city, full name, or abbreviation
-all work. Ambiguous names (e.g. "New York" for NFL, "Duke" partially
-matching Duquesne/James Madison's shared "Dukes" nickname) raise a clear
-error listing the real options rather than guessing.
+all work, and any of these that uniquely identifies one team is enough:
+`bears`, `chicago`, and `chicago bears` are all the same lookup, since
+the Bears are the only NFL team in Chicago. Where a name genuinely isn't
+unique (e.g. "New York" for NFL - Giants *and* Jets; "Chicago" for MLB -
+Cubs *and* White Sox; "Duke" partially matching Duquesne/James Madison's
+shared "Dukes" nickname), you get a clear error listing the real options
+rather than a guess.
 
 ## Follow a list, not just one team
 
@@ -202,7 +208,7 @@ is needed at all.
 
 ```bash
 sports-game <sport> <team>
-sports-game <sport> "<team>,<team>,..."    # several teams, one run - no config file needed
+sports-game <sport> <team>,<team>          # several teams, one run - no config file needed
 sports-game <sport> <team> --week 5        # a numbered week - football only
 sports-game <sport> <team> --range 1d      # every game today (incl. already finished)
 sports-game <sport> <team> --range 7d      # every game in the next 7 days

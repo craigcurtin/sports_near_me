@@ -17,12 +17,15 @@ basketball, NCAA baseball, NCAA men's hockey, and NCAA men's and women's
 volleyball.
 
 - Run with a **sport** and **team** for one specific lookup.
-- Run with a **sport** and a **comma-separated list of teams**
-  (`sports-game ncaaf "tennessee,wisconsin"`) to look up several teams
-  in one run, without needing a config file - each name resolves through
-  the same rules as a single-team lookup, and the list is deduplicated
-  by resolved team, so listing the same team two different ways only
-  shows it once.
+- Run with a **sport** and **several teams** to look them up in one run,
+  without needing a config file - `sports-game ncaaf tennessee,wisconsin`,
+  `tennessee, wisconsin` (space after the comma - no quoting needed;
+  every shell token after the sport is rejoined before splitting), or
+  even `tennessee wisconsin` (no comma at all) all work identically.
+  Quoting is never required, just occasionally convenient. Each name
+  resolves through the same rules as a single-team lookup, and the list
+  is deduplicated by resolved team, so listing the same team two
+  different ways only shows it once.
 - Run with just a **sport** to show every team (and every team in every
   followed conference) from your config file's follow list for that sport.
 - Run with **no arguments at all** to show your entire follow list across
