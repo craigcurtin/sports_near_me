@@ -115,6 +115,26 @@ def test_cli_flag_overrides_config_file(tmp_path):
     assert settings["tz"] == "America/New_York"
 
 
+def test_provenance_tracks_default_config_and_cli_sources(tmp_path):
+    # This is what --explain reads (see cli.py's _print_explain()) - a
+    # per-setting record of whether the final value came from the CLI, the
+    # config file, or was never set at all.
+    config = tmp_path / "config.yaml"
+    config.write_text("tz: America/Chicago\nlog_level: DEBUG\n")
+    settings = resolve_settings(_parse(["--config", str(config), "--tz", "America/New_York"]))
+    provenance = settings["_provenance"]
+    assert provenance["tz"] == "cli"  # CLI --tz beat the config's tz
+    assert provenance["log_level"] == "config"  # untouched by any CLI flag
+    assert provenance["week"] == "default"  # never set anywhere
+    assert provenance["range"] == "default"
+    assert provenance["log_dir"] == "default"
+
+
+def test_provenance_notes_verbose_and_silent_shortcuts_specifically():
+    assert resolve_settings(_parse(["--verbose"]))["_provenance"]["log_level"] == "cli (--verbose)"
+    assert resolve_settings(_parse(["--silent"]))["_provenance"]["log_level"] == "cli (--silent)"
+
+
 def test_missing_explicit_config_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         resolve_settings(_parse(["--config", str(tmp_path / "nope.yaml")]))

@@ -1,5 +1,6 @@
 import pytest
 
+from sports_near_me import cli
 from sports_near_me.cli import _resolve_explicit_teams, build_arg_parser
 from sports_near_me.leagues import mlb, nfl
 
@@ -81,3 +82,67 @@ def test_resolve_explicit_teams_raises_on_one_bad_name():
 def test_resolve_explicit_teams_raises_on_ambiguous_name():
     with pytest.raises(ValueError, match="matches more than one team"):
         _resolve_explicit_teams(nfl, "bears,new york")
+
+
+def test_explain_never_fetches_a_schedule(tmp_path, monkeypatch, capsys):
+    # The entire point of --explain is that it's safe/instant to run - no
+    # network call, no dependence on ESPN being up. fetch_schedule raising
+    # if called at all is the strongest way to prove that.
+    def _boom(*a, **kw):
+        raise AssertionError("--explain must never call fetch_schedule")
+    monkeypatch.setattr(cli, "fetch_schedule", _boom)
+
+    config = tmp_path / "config.yaml"
+    config.write_text("follow:\n  nfl:\n    teams: [Bears]\n")
+    assert cli.run(["--explain", "--config", str(config), "--silent"]) == 0
+    assert "Fetched" not in capsys.readouterr().out
+
+
+def test_explain_no_sport_lists_every_sport_in_the_config_follow_list(tmp_path, capsys):
+    config = tmp_path / "config.yaml"
+    config.write_text(
+        "follow:\n"
+        "  nfl:\n    teams: [Bears]\n"
+        "  mlb:\n    teams: [Cubs, Brewers]\n"
+        "  ncaaf:\n    teams: [Tennessee]\n    conferences: [SEC, Big Ten]\n"
+    )
+    assert cli.run(["--explain", "--config", str(config), "--silent"]) == 0
+    out = capsys.readouterr().out
+    assert "nfl: teams: Bears" in out
+    assert "mlb: teams: Cubs, Brewers" in out
+    assert "ncaaf: teams: Tennessee" in out
+    assert "ncaaf: conferences: SEC, Big Ten" in out
+    assert "source: config (follow.nfl.teams)" in out
+    assert "source: config (follow.ncaaf.conferences)" in out
+
+
+def test_explain_explicit_cli_team_overrides_config_source(tmp_path, capsys):
+    config = tmp_path / "config.yaml"
+    config.write_text("follow:\n  mlb:\n    teams: [Cubs]\n")
+    assert cli.run(["mlb", "cubs", "brewers", "--explain",
+                     "--config", str(config), "--silent"]) == 0
+    out = capsys.readouterr().out
+    assert "mlb: cubs, brewers" in out
+    assert "source: cli (explicit team argument" in out
+    assert "follow.mlb.teams" not in out  # config's list is fully bypassed, not just supplemented
+
+
+def test_explain_notes_unconfigured_sport_would_fail(tmp_path, capsys):
+    config = tmp_path / "config.yaml"
+    config.write_text("follow:\n  mlb:\n    teams: [Cubs]\n")
+    assert cli.run(["nhl", "--explain", "--config", str(config), "--silent"]) == 0
+    out = capsys.readouterr().out
+    assert "nhl: (nothing configured)" in out
+    assert "would fail" in out
+
+
+def test_explain_reports_provenance_for_a_cli_overridden_setting(tmp_path, capsys):
+    config = tmp_path / "config.yaml"
+    config.write_text("tz: America/Chicago\nfollow:\n  nfl:\n    teams: [Bears]\n")
+    assert cli.run(["--explain", "--config", str(config), "--tz", "America/New_York"]) == 0
+    out = capsys.readouterr().out
+    assert "America/New_York" in out
+    # The line naming the tz setting should attribute it to the CLI, not the config.
+    tz_line = next(line for line in out.splitlines() if line.startswith("tz "))
+    assert "cli" in tz_line
+    assert "config" not in tz_line

@@ -316,12 +316,51 @@ no-arguments "show everything I follow" mode):
 | `--verbose` | Show DEBUG-level diagnostics on stderr - what got fetched, from where. Never changes the report itself. |
 | `--silent` | Only print the report and real errors - suppress the normal progress diagnostics. |
 | `--log-dir DIR` | Also write a timestamped diagnostic log file into `DIR`, in addition to stderr. |
+| `--explain` | Don't fetch anything - just print which config file is in use, which sports/teams this run would query, and whether each setting came from a CLI flag or the config file. See below. |
 
 `--week` and `--range` are mutually exclusive - each is a different way
 of picking which game(s) to show; the default with neither is just the
 single next upcoming game. `--verbose`, `--silent`, and `--log-dir` never
 touch the report itself (stdout) - only how much diagnostic detail goes
 to stderr/a log file.
+
+### `--explain`: what would this run do?
+
+Before trusting a report - especially the first time you edit your config,
+or when the teams shown aren't the ones you expected - run the exact same
+command with `--explain` added. It resolves nothing against ESPN and
+fetches no schedule, so it's instant, works offline, and is completely
+safe to try:
+
+```bash
+sports-game mlb cubs brewers --explain --silent
+```
+
+```
+=== --explain: showing what this run would do - nothing was fetched from ESPN ===
+
+Config file: /Users/you/.sports_near_me.yaml  (existing file, loaded)
+
+Setting    Value                        Source
+tz         (not set)                    default
+log_level  ERROR                        cli (--silent)
+log_dir    (not set)                    default
+week       (not set)                    default
+range      (not set)                    default
+
+Sports/teams this run would query:
+  mlb: cubs, brewers
+           source: cli (explicit team argument - overrides follow.mlb in the config for this run)
+```
+
+Run it with no sport at all (`sports-game --explain`) and it walks your
+whole config's `follow:` list, sport by sport, the same way a real
+no-argument run would - so you can see exactly what "show everything I
+follow" is about to do before it does it. A sport with nothing configured
+and no team on the command line is reported as it would fail
+("would fail: no team given, and nothing under follow.\<sport\> in the
+config"), not silently skipped - the same thing a real run would tell you,
+just without the network round trip first.
 
 ### Common usage patterns
 

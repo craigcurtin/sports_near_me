@@ -72,6 +72,61 @@ impractical to hand-maintain and conference realignment does happen.
 | `--log-level LEVEL` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. Default: `INFO`. Mutually exclusive with `-v`/`-s`. |
 | `-v`, `--verbose` | Shortcut for `--log-level DEBUG`. |
 | `-s`, `--silent` | Shortcut for `--log-level ERROR` — only the report and real errors print. |
+| `--explain` | Print what this run *would* do — which config file is in use, which sports/teams would be queried and whether each came from a CLI flag or the config's `follow:` list, and where every other setting (`--tz`, `--week`, etc.) came from — without contacting ESPN at all. See [below](#--explain-what-would-this-run-do). |
+
+## `--explain`: what would this run do?
+
+`--explain` answers "what is this actually going to do, and why" before it
+does it — useful the first time you point `--config` at a new file, or
+whenever a report doesn't look like what you expected and you want to
+check whether a setting came from a flag you typed or from the config
+file. It never resolves a team name against ESPN and never fetches a
+schedule, so it's instant and works even if ESPN is down.
+
+```
+$ sports-game mlb cubs brewers --explain --silent
+=== --explain: showing what this run would do - nothing was fetched from ESPN ===
+
+Config file: /Users/craig/.sports_near_me.yaml  (existing file, loaded)
+
+Setting    Value                        Source
+tz         (not set)                    default
+log_level  ERROR                        cli (--silent)
+log_dir    (not set)                    default
+week       (not set)                    default
+range      (not set)                    default
+
+Sports/teams this run would query:
+  mlb: cubs, brewers
+           source: cli (explicit team argument - overrides follow.mlb in the config for this run)
+```
+
+With no sport given at all, it walks every sport under the config's
+`follow:` list — exactly what a real no-argument run would do — showing
+each sport's configured teams and/or conferences (conference membership
+itself isn't resolved, since that's a network call too):
+
+```
+$ sports-game --explain --silent
+...
+Sports/teams this run would query:
+  nfl: teams: Bears
+           source: config (follow.nfl.teams)
+  mlb: teams: Cubs, Brewers
+           source: config (follow.mlb.teams)
+  ncaaf: teams: Tennessee
+           source: config (follow.ncaaf.teams)
+  ncaaf: conferences: SEC, Big Ten (membership not resolved in --explain)
+           source: config (follow.ncaaf.conferences)
+```
+
+A sport with nothing configured and no team given on the command line is
+reported as it would fail, not silently skipped:
+
+```
+  nhl: (nothing configured)
+           would fail: no team given, and nothing under follow.nhl in the config
+```
 
 ## As-of timestamp
 

@@ -158,22 +158,90 @@ def _print_team(league, team, settings) -> None:
 
     if settings["week"] is not None:
         selected = [g for g in [game_for_week(games, settings["week"])] if g]
-        scope = f"week {settings['week']}"
+        no_game_message = f"{team.display_name}: no game found for week {settings['week']}."
     elif settings["range"] is not None:
         selected = games_within(games, settings["range"], display_tz)
-        scope = f"the next {settings['range']} day(s)"
+        no_game_message = (f"{team.display_name}: no games found in the next "
+                            f"{settings['range']} day(s).")
     else:
         selected = [g for g in [next_game(games)] if g]
-        scope = "an upcoming game"
+        # ESPN's own schedule feed just ends (offseason, or next season not
+        # posted yet) rather than ever saying "no more games" itself - this
+        # is that case, not a fetch problem, so it reads as a plain fact
+        # rather than an error.
+        no_game_message = f"{team.display_name}: no games scheduled in the near future."
 
     if not selected:
-        print(f"{team.display_name}: no game found for {scope}.")
+        print(no_game_message)
         return
 
     for i, game in enumerate(selected):
         if len(selected) > 1 and i > 0:
             print()
         _format_game(league, team, game, display_tz)
+
+
+def _print_explain(args: argparse.Namespace, settings: dict) -> None:
+    """--explain's entire report - built purely from settings/args already
+    in hand, no network call. Mirrors run()'s own sport/team-selection
+    logic (same sports_to_run, same explicit-CLI-team-overrides-config
+    branch) so the plan shown here is exactly what a real run would do,
+    just without resolving team names against ESPN or fetching a
+    schedule."""
+    print("=== --explain: showing what this run would do - nothing was fetched from ESPN ===")
+    print()
+
+    if settings.get("_config_created"):
+        print(f"Config file: {settings['_config_path']}  (just auto-created - none existed yet)")
+    elif settings["_config_path"]:
+        print(f"Config file: {settings['_config_path']}  (existing file, loaded)")
+    else:
+        print("Config file: none in use (no default file present, and no --config given)")
+    print()
+
+    provenance = settings["_provenance"]
+    print(f"{'Setting':<10} {'Value':<28} Source")
+    for key in ("tz", "log_level", "log_dir", "week", "range"):
+        value = settings[key]
+        display_value = str(value) if value is not None else "(not set)"
+        print(f"{key:<10} {display_value:<28} {provenance.get(key, 'default')}")
+    print()
+
+    print("Sports/teams this run would query:")
+    sports_to_run = [args.sport] if args.sport else list(settings["_follow"].keys())
+    if not sports_to_run:
+        print("  (none - no sport given on the command line, and no 'follow:' "
+              "section in the config file)")
+        return
+
+    for sport in sports_to_run:
+        if sport not in LEAGUES:
+            print(f"  {sport}: not a sport this tool knows - would be skipped with a warning")
+            continue
+
+        explicit_team = args.sport and getattr(args, "team", None)
+        if explicit_team:
+            raw = ", ".join(args.team)
+            print(f"  {sport}: {raw}")
+            print(f"           source: cli (explicit team argument - overrides "
+                  f"follow.{sport} in the config for this run)")
+            continue
+
+        cfg = settings["_follow"].get(sport) or {}
+        teams = cfg.get("teams", [])
+        conferences = cfg.get("conferences", [])
+        if not teams and not conferences:
+            print(f"  {sport}: (nothing configured)")
+            print(f"           would fail: no team given, and nothing under "
+                  f"follow.{sport} in the config")
+            continue
+        if teams:
+            print(f"  {sport}: teams: {', '.join(teams)}")
+            print(f"           source: config (follow.{sport}.teams)")
+        if conferences:
+            print(f"  {sport}: conferences: {', '.join(conferences)} "
+                  f"(membership not resolved in --explain)")
+            print(f"           source: config (follow.{sport}.conferences)")
 
 
 def run(argv=None) -> int:
@@ -199,6 +267,10 @@ def run(argv=None) -> int:
               f"teams.", file=sys.stderr)
     elif settings["_config_path"]:
         logger.info(f"Loaded config from {settings['_config_path']}")
+
+    if args.explain:
+        _print_explain(args, settings)
+        return 0
 
     sports_to_run = [args.sport] if args.sport else list(settings["_follow"].keys())
     if not sports_to_run:

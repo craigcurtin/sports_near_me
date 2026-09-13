@@ -119,6 +119,11 @@ def add_shared_flags(parser: argparse.ArgumentParser) -> None:
                             help="Shortcut for --log-level DEBUG.")
     verbosity.add_argument("--silent", "-s", action="store_true", default=False,
                             help="Shortcut for --log-level ERROR - only the report and real errors print.")
+    parser.add_argument("--explain", action="store_true", default=False,
+                         help="Print what this run would do - which config file is in use, "
+                              "which sports/teams would be queried, and whether each setting "
+                              "came from a CLI flag or the config file - without contacting "
+                              "ESPN at all.")
 
 
 def load_config_file(path: Path) -> dict:
@@ -153,6 +158,10 @@ def resolve_settings(args: argparse.Namespace) -> dict:
     isn't left with an empty follow list either."""
     settings = dict(DEFAULTS)
     settings["_config_created"] = False
+    # Tracks, per DEFAULTS key, whether the final value came from "cli",
+    # "config", or stayed at "default" - purely for --explain's report
+    # (see cli.py's _print_explain()); resolution logic below is unaffected.
+    provenance = {key: "default" for key in DEFAULTS}
 
     config_arg = getattr(args, "config", None)
     config_path = Path(config_arg).expanduser() if config_arg else DEFAULT_CONFIG_PATH
@@ -174,6 +183,7 @@ def resolve_settings(args: argparse.Namespace) -> dict:
     for key in ("tz", "log_level", "log_dir"):
         if key in config:
             settings[key] = config[key]
+            provenance[key] = "config"
 
     settings["_follow"] = config.get("follow", {})
 
@@ -181,12 +191,16 @@ def resolve_settings(args: argparse.Namespace) -> dict:
         cli_value = getattr(args, key, None)
         if cli_value is not None:
             settings[key] = cli_value
+            provenance[key] = "cli"
 
     if getattr(args, "verbose", False):
         settings["log_level"] = "DEBUG"
+        provenance["log_level"] = "cli (--verbose)"
     elif getattr(args, "silent", False):
         settings["log_level"] = "ERROR"
+        provenance["log_level"] = "cli (--silent)"
 
+    settings["_provenance"] = provenance
     return settings
 
 

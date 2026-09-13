@@ -147,6 +147,51 @@ Shortcut for \fB\-\-log\-level DEBUG\fR.
 .BR \-s ", " \-\-silent
 Shortcut for \fB\-\-log\-level ERROR\fR \(em only the report and real
 errors are printed.
+.TP
+.B \-\-explain
+Print what this run would do instead of doing it: which config file is in
+use, which sports/teams would be queried and whether each came from a CLI
+flag or the config's
+.B follow:
+list, and where every other setting came from. Never resolves a team
+against ESPN and never fetches a schedule \(em safe and instant even if
+ESPN is unreachable. See
+.BR EXPLAIN .
+.SH EXPLAIN
+With a sport and team given, shows the raw team argument and notes that
+it came from the command line, overriding any
+.I follow.<sport>
+entry in the config for this run. With no sport given,
+.B \-\-explain
+walks every sport in the config's
+.B follow:
+list \(em exactly what a real no-argument run would do \(em showing each
+sport's configured teams and/or conferences. Conference membership itself
+is not resolved (that is also a network call); a sport with nothing
+configured and no team given on the command line is reported as it would
+fail, not silently skipped.
+.PP
+Example:
+.PP
+.nf
+.RS
+$ sports-game mlb cubs brewers \-\-explain \-\-silent
+=== \-\-explain: showing what this run would do \- nothing was fetched from ESPN ===
+
+Config file: /Users/you/.sports_near_me.yaml  (existing file, loaded)
+
+Setting    Value                        Source
+tz         (not set)                    default
+log_level  ERROR                        cli (\-\-silent)
+log_dir    (not set)                    default
+week       (not set)                    default
+range      (not set)                    default
+
+Sports/teams this run would query:
+  mlb: cubs, brewers
+           source: cli (explicit team argument \- overrides follow.mlb in the config for this run)
+.RE
+.fi
 .SH AS-OF TIMESTAMP
 Every run prints an
 .B "As of:"
