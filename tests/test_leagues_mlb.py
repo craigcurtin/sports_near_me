@@ -49,5 +49,11 @@ def test_known_audio_verified_team():
     assert url.startswith("https://")
 
 
+def test_known_audio_second_verified_team():
+    station, url = mlb.known_audio("CWS")
+    assert "ESPN 1000" in station
+    assert url.startswith("https://")
+
+
 def test_known_audio_unverified_team_returns_none():
     assert mlb.known_audio("NYY") is None
