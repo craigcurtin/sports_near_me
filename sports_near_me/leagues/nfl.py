@@ -96,6 +96,11 @@ KNOWN_AUDIO = {
             "https://www.chicagobears.com/audio/listen-live-on-wbbm-newsradio-780-105-9-fm"),
     "GB": ("95.7 BIG FM (WRIT), Packers Radio Network",
            "https://www.packers.com/video/radio-network"),
+    "MIN": ("KFAN 100.3 FM (KFXN), Vikings Radio Network",
+            "https://www.vikings.com/audio/radio-network"),
+    "KC": ("96.5 The Fan (KFNZ)", "https://www.chiefs.com/listen/"),
+    "DET": ("97.1 The Ticket (WXYT), Lions Radio Network",
+            "https://www.detroitlions.com/tunein/lions-radio-network"),
 }
 
 

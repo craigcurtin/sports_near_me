@@ -46,15 +46,16 @@ def test_broadcast_note_skips_radio_only():
     assert "not yet announced" in nfl.broadcast_note(game).lower()
 
 
-def test_known_audio_verified_team():
-    station, url = nfl.known_audio("CHI")
-    assert "WBBM" in station
-    assert url.startswith("https://")
-
-
-def test_known_audio_second_verified_team():
-    station, url = nfl.known_audio("GB")
-    assert "WRIT" in station
+@pytest.mark.parametrize("abbr,expect_in_station", [
+    ("CHI", "WBBM"),
+    ("GB", "WRIT"),
+    ("MIN", "KFAN"),
+    ("KC", "KFNZ"),
+    ("DET", "WXYT"),
+])
+def test_known_audio_verified_teams(abbr, expect_in_station):
+    station, url = nfl.known_audio(abbr)
+    assert expect_in_station in station
     assert url.startswith("https://")
 
 
