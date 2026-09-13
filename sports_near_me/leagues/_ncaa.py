@@ -18,9 +18,17 @@ from ..resolve import resolve
 
 
 class NcaaLeague:
-    def __init__(self, sport: str, league: str):
+    def __init__(self, sport: str, league: str, known_audio: dict = None):
         self.SPORT = sport
         self.LEAGUE = league
+        # Verified regional radio/audio flagships (school sports networks -
+        # Vol Network, Sooner Sports Network, etc.), keyed by the NUMERIC
+        # ESPN team id for THIS sport specifically - a school's id differs
+        # per sport (see dynamic_teams.py), so an entry here only applies
+        # to this one NcaaLeague instance, not the school in general. Same
+        # "small and honestly partial, not a guess at every school" reasoning
+        # as nfl.py's/mlb.py's KNOWN_AUDIO.
+        self._known_audio = known_audio or {}
 
     def resolve_team(self, query: str):
         return resolve(query, fetch_all_teams(self.SPORT, self.LEAGUE))
@@ -30,6 +38,9 @@ class NcaaLeague:
 
     def conf_members(self, conference_id: str) -> list:
         return conference_members(conference_id, self.SPORT, self.LEAGUE)
+
+    def known_audio(self, team_id: str):
+        return self._known_audio.get(team_id)
 
     def broadcast_note(self, game) -> str:
         tv_or_stream = [b for b in game.broadcasts if b.medium != "Radio"]

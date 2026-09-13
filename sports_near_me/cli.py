@@ -71,20 +71,33 @@ def _format_game(league, team, game, display_tz) -> None:
 
     audio = audio_note(game)
     print(f"Audio:   {audio}")
-    # A league can optionally point to its own national audio-streaming
-    # product (e.g. MLB Audio) - worth surfacing only when this game
-    # actually has an audio entry AND you're not necessarily in either
-    # team's home/away market, where the listed regional stations already
-    # cover you. See leagues/mlb.py's AUDIO_INFO_URL.
-    audio_link = getattr(league, "AUDIO_INFO_URL", None)
-    if audio_link and "No audio broadcast listed" not in audio:
-        print(f"         Out-of-market listeners: {audio_link}")
-        android = getattr(league, "AUDIO_APP_ANDROID_URL", None)
-        ios = getattr(league, "AUDIO_APP_IOS_URL", None)
-        if android:
-            print(f"         Android app: {android}")
-        if ios:
-            print(f"         iOS app:     {ios}")
+
+    # A hand-verified regional flagship (see leagues/nfl.py's/mlb.py's/
+    # nhl.py's KNOWN_AUDIO) is worth printing whether or not ESPN itself
+    # reported anything - this is exactly the case that motivated it:
+    # ESPN's feed missing a real, currently-active broadcast (confirmed
+    # for a real Bears game against WBBM's own standing contract).
+    known_audio_fn = getattr(league, "known_audio", None)
+    known = known_audio_fn(team.id) if known_audio_fn else None
+    if known:
+        station, url = known
+        print(f"         Verified regional flagship: {station} - {url}")
+
+    # A league can optionally list its own standing national audio
+    # options (Westwood One + iHeartRadio for NFL, MLB Audio + app for
+    # MLB, TuneIn for NHL) - each entry individually verified real and,
+    # where claimed free, actually free (SiriusXM/TuneIn Premium were
+    # checked for NFL and deliberately left out - paid-only there, unlike
+    # NHL). NOT gated on whether ESPN reported an audio entry for this
+    # specific game - these are blanket "every game, every team" services
+    # that apply regardless of ESPN's own (confirmed incomplete) per-game
+    # audio data, unlike a regional flagship which is one specific team's
+    # own broadcast.
+    out_of_market = getattr(league, "OUT_OF_MARKET_AUDIO", [])
+    if out_of_market:
+        print("         Out-of-market listeners:")
+        for label, url in out_of_market:
+            print(f"           {label}: {url}")
 
     if game.link:
         print(f"More at: {game.link}")

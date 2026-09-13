@@ -44,3 +44,13 @@ def test_broadcast_note_no_broadcast():
 def test_broadcast_note_skips_radio_only():
     game = _game("ESPN Radio", medium="Radio")
     assert "not yet announced" in nfl.broadcast_note(game).lower()
+
+
+def test_known_audio_verified_team():
+    station, url = nfl.known_audio("CHI")
+    assert "WBBM" in station
+    assert url.startswith("https://")
+
+
+def test_known_audio_unverified_team_returns_none():
+    assert nfl.known_audio("SF") is None

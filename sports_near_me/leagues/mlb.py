@@ -11,13 +11,16 @@ from ..resolve import Team, resolve
 
 SPORT, LEAGUE = "baseball", "mlb"
 
-# Surfaced by cli.py for out-of-market listeners when a game has an audio
-# entry. All three verified directly (not guessed) before being wired in:
-# the subscription page, and both app-store listings since the audio
-# product is consumed through the MLB App on a phone as much as the web.
-AUDIO_INFO_URL = "https://www.mlb.com/live-stream-games/subscribe/mlb-audio"
-AUDIO_APP_ANDROID_URL = "https://play.google.com/store/apps/details?id=com.bamnetworks.mobile.android.gameday.atbat"
-AUDIO_APP_IOS_URL = "https://apps.apple.com/us/app/mlb/id493619333"
+# Surfaced by cli.py for out-of-market listeners, every game, regardless
+# of what ESPN's own (confirmed incomplete) audio data says. All three
+# verified directly (not guessed) before being wired in: the subscription
+# page, and both app-store listings since the audio product is consumed
+# through the MLB App on a phone as much as the web.
+OUT_OF_MARKET_AUDIO = [
+    ("MLB Audio subscription", "https://www.mlb.com/live-stream-games/subscribe/mlb-audio"),
+    ("MLB App - Android", "https://play.google.com/store/apps/details?id=com.bamnetworks.mobile.android.gameday.atbat"),
+    ("MLB App - iOS", "https://apps.apple.com/us/app/mlb/id493619333"),
+]
 
 _RAW_TEAMS = [
     ("ARI", "Arizona", "Diamondbacks"), ("ATL", "Atlanta", "Braves"),
@@ -56,6 +59,20 @@ def _build_teams() -> list:
 TEAMS = _build_teams()
 
 _MARKET_LABELS = {"National": "National", "Home": "Home broadcast", "Away": "Away broadcast"}
+
+# Verified regional radio/audio flagships, keyed by team abbreviation - see
+# nfl.py's KNOWN_AUDIO for why this is small and honestly partial rather
+# than a guess at all 30 teams. The Cubs specifically illustrate why this
+# needs periodic re-verification, not a "set once" table: their flagship
+# moved WGN -> WBBM -> WSCR across roughly the last decade of real
+# contract changes.
+KNOWN_AUDIO = {
+    "CHC": ("WSCR 670 The Score", "https://www.audacy.com/670thescore"),
+}
+
+
+def known_audio(team_id: str):
+    return KNOWN_AUDIO.get(team_id)
 
 
 def resolve_team(query: str) -> Team:

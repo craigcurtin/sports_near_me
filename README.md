@@ -3,17 +3,19 @@
 When do the teams you follow play next, and can you actually watch or listen?
 
 ```
-$ sports-game mlb cubs --tz America/Chicago
-As of: Sunday, September 13, 2026  06:39 AM CDT - schedules can change after this.
+$ sports-game nhl blackhawks
+As of: Sunday, September 13, 2026  08:02 AM EDT - schedules can change after this.
 
-Game: Chicago Cubs vs. Pittsburgh Pirates
-Kickoff: Sunday, September 13, 2026  01:20 PM CDT
-Venue:   Wrigley Field (Chicago, Illinois)
-TV:      National: MLB.TV (Streaming) | Home broadcast: Marquee Sports Net (TV)  [MLB.TV
-         blacks out both teams' home markets - if you're in one of those two, use the
-         Home/Away channel listed instead.]
-Audio:   No audio broadcast listed.
-More at: https://www.espn.com/mlb/game/_/gameId/401816929/pirates-cubs
+Game: Chicago Blackhawks at Vegas Golden Knights
+Kickoff: Tuesday, September 29, 2026  10:30 PM EDT
+Venue:   T-Mobile Arena (Las Vegas, NV)
+TV:      ESPN - national broadcast, every market gets this one.
+Audio:   None listed in ESPN's data - that's a known gap, not evidence there isn't
+         one. Your team's local flagship station/stream almost certainly still
+         carries this regionally; check the team's own site/app if you need it.
+         Verified regional flagship: WGN Radio 720 AM - https://wgnradio.com/blackhawks/blackhawks-live/
+         Out-of-market listeners: https://tunein.com/radio/NHL-Radio--Stream-Hockey-Radio-c393481/
+More at: https://www.espn.com/nhl/game/_/gameId/401891775/blackhawks-golden-knights
 ```
 
 Ten leagues, one tool: **NFL, MLB, NHL, NCAA football, NCAA men's/women's
@@ -77,9 +79,28 @@ conference members.
   the real National/Home/Away broadcast split per game (e.g. "national
   streaming on MLB.TV" + "home broadcast: Marquee Sports Net" + "away
   broadcast: Nationals.TV"), including the MLB.TV blackout caveat for
-  the two teams' home markets. When a game has an audio entry, MLB also
-  gets a direct link to MLB's own audio-streaming subscription plus the
-  official MLB App (iOS and Android) - useful for an out-of-market listener.
+  the two teams' home markets.
+- **ESPN's own audio/radio data is confirmed incomplete** - a real Bears
+  game came back with zero audio entries despite WBBM actively carrying
+  every Bears game under a standing contract. Rather than take that
+  silence at face value, a small **hand-verified table** of real regional
+  flagships (Bears → WBBM, Cubs → WSCR, Blackhawks → WGN, Tennessee → the
+  Vol Network - see `leagues/*.py`'s `KNOWN_AUDIO`) fills the gap for the
+  teams checked so far. It's deliberately partial, not a guess at every
+  team in every league - broadcast rights are real contracts that get
+  renegotiated (the Cubs alone changed flagship stations three times in
+  the last decade), so each entry needs periodic re-verification, not a
+  "set once" assumption.
+- **A separate, standing "out-of-market" list per league** (NFL →
+  Westwood One + iHeartRadio, MLB → MLB Audio + the official app, NHL →
+  TuneIn's NHL page) - useful because a team's own local stream can
+  legally black out sports content for out-of-market listeners even
+  while the AM/FM signal plays fine in its home market (confirmed: this
+  is real, not hypothetical, for WGN's Blackhawks stream). Each option
+  was checked for being both real *and* actually free where claimed -
+  TuneIn is free for every NHL game but paid-only for out-of-market NFL
+  games in the US, which is why NFL's list uses iHeartRadio instead.
+  These apply to every game regardless of what ESPN's own audio data says.
 - **NCAA** (all six sports) and **NHL** national broadcasts are flagged as
   a single nationally-distributed feed once you have the right cable/
   streaming access - not a regional-map question.

@@ -41,3 +41,13 @@ def test_broadcast_note_excludes_radio():
 def test_broadcast_note_no_tv_or_streaming():
     game = _game([Broadcast(network="ERADM", medium="Radio", market_type="National")])
     assert "not yet announced" in mlb.broadcast_note(game).lower()
+
+
+def test_known_audio_verified_team():
+    station, url = mlb.known_audio("CHC")
+    assert "670 The Score" in station
+    assert url.startswith("https://")
+
+
+def test_known_audio_unverified_team_returns_none():
+    assert mlb.known_audio("NYY") is None

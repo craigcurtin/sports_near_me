@@ -65,8 +65,12 @@ def test_is_home_matches_numeric_id_or_abbreviation():
 
 
 def test_audio_note_none_listed():
+    # Deliberately hedged, not a flat "no broadcast" - ESPN's feed is
+    # confirmed to miss real, currently-active flagship stations.
     g = _game("1", 1, "2026-09-13T17:00:00", broadcasts=[Broadcast("FOX", "TV", "National")])
-    assert audio_note(g) == "No audio broadcast listed."
+    note = audio_note(g)
+    assert "None listed in ESPN's data" in note
+    assert "known gap" in note
 
 
 def test_has_upcoming_event_true_for_future_uncompleted_game():

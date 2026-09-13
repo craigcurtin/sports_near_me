@@ -146,11 +146,28 @@ otherwise look missing to someone skimming this file:
 - **A direct per-game link** (`Game.link`, from ESPN's own event data) and
   **real, verified external links where they add something ESPN's API
   doesn't give directly** - `thesportsmaps.com/nfl` for the NFL regional-
-  window problem, and MLB's own audio subscription + App Store/Google
-  Play listings when a game has an audio entry. Every one of these was
-  fetched and checked before being wired in, not guessed from memory -
-  do the same for any new link: a wrong URL in a tool like this is worse
-  than no link at all.
+  window problem, and each league's `OUT_OF_MARKET_AUDIO` list (Westwood
+  One + iHeartRadio for NFL, MLB Audio + app for MLB, TuneIn for NHL).
+  Every one of these was fetched and checked before being wired in, not
+  guessed from memory - do the same for any new link: a wrong URL in a
+  tool like this is worse than no link at all. A claimed-free option
+  needs the SAME check - TuneIn is free for every NHL game but paid-only
+  for out-of-market NFL games, which is exactly why NFL's list uses
+  iHeartRadio instead, not TuneIn.
+- **A small, explicitly-partial `KNOWN_AUDIO` table per league**
+  (`leagues/nfl.py`, `mlb.py`, `nhl.py`, and per-instance on `NcaaLeague`
+  for NCAA), for verified REGIONAL flagships - distinct from
+  `OUT_OF_MARKET_AUDIO` above, which is national/blanket. This exists
+  because ESPN's own audio data is CONFIRMED incomplete: a real Bears
+  game came back with zero audio entries despite WBBM actively carrying
+  every Bears game under a standing contract. Only entries checked by
+  hand are here (currently: Bears→WBBM, Cubs→WSCR, Blackhawks→WGN,
+  Tennessee football→the Vol Network) - this is deliberately not an
+  attempt at all 32 NFL + 30 MLB + hundreds of NCAA teams in one pass.
+  Expect it to need re-verification over time, not just extension - the
+  Cubs alone changed flagship stations three times in the last decade,
+  and a station carrying one team doesn't imply anything about another
+  (WGN lost the Cubs but currently holds the Blackhawks).
 
 ## Ideas not built yet
 
@@ -165,10 +182,12 @@ Roughly in order of "someone will probably ask for this next":
   programmatically is still blocked by 506sports-style maps refusing
   automated requests - if a non-blocked source ever turns up, this is a
   contained change to `leagues/nfl.py`'s `broadcast_note()`.
-- **Per-team audio/app links for leagues beyond MLB**, if a similarly
-  reliable single source (not a per-affiliate table) turns up for NFL,
-  NHL, or NCAA - MLB got this because MLB itself brands one official
-  "Audio" product; the other leagues don't obviously have an equivalent.
+- **Expanding `KNOWN_AUDIO`** to more teams than the four verified so
+  far, per league/school, each one individually checked - not a bulk
+  guess. `leagues/nfl.py`'s comment on the iHeartRadio find (a page
+  listing stations for all 32 NFL teams) is a plausible starting point
+  for NFL specifically, still needing each entry spot-checked before
+  trusting it.
 - **Cross-process caching for the NCAA team/conference lists**, if
   latency ever matters (following a big conference means one HTTP call
   per member team plus one for the roster itself). Needs a TTL - see

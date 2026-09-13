@@ -174,11 +174,7 @@ ESPN reports the actual National/Home/Away split per game, so
 .B sports-game
 prints all of it directly \(em e.g. national streaming on MLB.TV plus
 each team's own regional network. A note about MLB.TV's blackout of
-both teams' home markets is appended when relevant. When a game has an
-audio entry, an extra block follows with a link to MLB's own audio-
-streaming subscription and the official MLB App (both the iOS App Store
-and Google Play listings) \(em useful for an out-of-market listener,
-alongside the regional stations already listed for people in-market.
+both teams' home markets is appended when relevant.
 .TP
 .B NCAA (all six sports) and NHL national games
 A conference or league TV/streaming deal is one single
@@ -189,6 +185,25 @@ nationally-distributed feed of that specific game, not a regional split
 ESPN's schedule data does not include regional-sports-network coverage
 for most NHL games; an empty broadcast line there means "check your
 team's local RSN or streaming app," not "nothing airs."
+.TP
+.B Audio, specifically
+ESPN's own audio data is confirmed incomplete \(em a real Bears game
+came back with zero audio entries despite WBBM actively carrying every
+Bears game under a standing contract \(em so an empty
+.B Audio
+line is a hedge, not a flat "nothing airs." Two more lines follow when
+known: a
+.B "Verified regional flagship"
+from a small, hand-checked table (Bears\(->WBBM, Cubs\(->WSCR,
+Blackhawks\(->WGN, Tennessee football\(->the Vol Network \(em
+deliberately partial, not a guess at every team), and
+.B "Out-of-market listeners"
+\(em each league's own standing national audio option(s), shown for
+every game regardless of what ESPN reported (Westwood One + iHeartRadio
+for NFL, MLB Audio + the official app for MLB, TuneIn for NHL) \(em each
+checked for being both real
+.I and
+actually free where claimed.
 .SH EXIT STATUS
 .TP
 .B 0

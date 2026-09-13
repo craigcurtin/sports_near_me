@@ -12,6 +12,16 @@ from ..resolve import Team, resolve
 
 SPORT, LEAGUE = "hockey", "nhl"
 
+# Surfaced by cli.py for out-of-market listeners, every game, regardless
+# of what ESPN's own (confirmed incomplete) audio data says. Verified
+# real and working before wiring in - free, every team, home/away call
+# options - with one caveat worth keeping in mind: not available to
+# listeners in Canada (rights restriction), which this tool has no way
+# to flag per-listener.
+OUT_OF_MARKET_AUDIO = [
+    ("TuneIn NHL Radio (free)", "https://tunein.com/radio/NHL-Radio--Stream-Hockey-Radio-c393481/"),
+]
+
 _RAW_TEAMS = [
     ("ANA", "Anaheim", "Ducks"), ("BOS", "Boston", "Bruins"),
     ("BUF", "Buffalo", "Sabres"), ("CGY", "Calgary", "Flames"),
@@ -41,6 +51,21 @@ def _build_teams() -> list:
 
 
 TEAMS = _build_teams()
+
+# Verified regional radio/audio flagships, keyed by team abbreviation - see
+# nfl.py's KNOWN_AUDIO for why this is small and honestly partial rather
+# than a guess at all 32 teams. Particularly worth checking periodically
+# here: WGN lost the Cubs' radio rights back in 2014 but holds the
+# Blackhawks' under a separate, current multi-year extension - the same
+# station name can be right for one team and wrong for another in the
+# same city, and wrong again after the next renewal.
+KNOWN_AUDIO = {
+    "CHI": ("WGN Radio 720 AM", "https://wgnradio.com/blackhawks/blackhawks-live/"),
+}
+
+
+def known_audio(team_id: str):
+    return KNOWN_AUDIO.get(team_id)
 
 
 def resolve_team(query: str) -> Team:

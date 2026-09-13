@@ -91,16 +91,32 @@ verified county/zip-searchable coverage map, or the NFL app's "Local" tab.
 **MLB** — ESPN reports the actual National/Home/Away split per game, so
 `sports-game` prints all of it directly — e.g. national streaming on
 MLB.TV plus each team's own regional network. A note about MLB.TV's
-blackout of both teams' home markets is appended when relevant. When a
-game has an audio entry, an extra block follows with a link to MLB's own
-audio-streaming subscription and the official MLB App (both the iOS App
-Store and Google Play listings) — useful for an out-of-market listener,
-alongside the regional stations already listed for people in-market.
+blackout of both teams' home markets is appended when relevant.
 
 **NCAA (all six sports) and NHL national games** — A conference or league
 TV/streaming deal is one single nationally-distributed feed of that
 specific game, not a regional split — you just need the matching
 cable/streaming access.
+
+**Audio, specifically — ESPN's own data is confirmed incomplete.** A real
+Bears game came back with zero audio entries despite WBBM actively
+carrying every Bears game under a standing contract, so an empty `Audio:`
+line reads as a hedge ("none listed in ESPN's data," not "nothing airs"),
+and two more things follow it when known:
+
+- **Verified regional flagship** — a small, hand-checked table
+  (`KNOWN_AUDIO` in each league module) for teams actually verified so
+  far: Bears→WBBM, Cubs→WSCR, Blackhawks→WGN, Tennessee football→the Vol
+  Network. Deliberately partial, not a guess at every team — see
+  [EXTENDING.md](EXTENDING.md) for why this needs periodic
+  re-verification rather than one-time completion.
+- **Out-of-market listeners** — each league's own standing national audio
+  option(s) (`OUT_OF_MARKET_AUDIO`), shown for every game regardless of
+  what ESPN reported: Westwood One + iHeartRadio for NFL, MLB Audio + the
+  official app for MLB, TuneIn for NHL. Each entry was checked for both
+  being real *and* actually free where claimed — TuneIn is free for every
+  NHL game but paid-only for out-of-market NFL games in the US, which is
+  exactly why NFL's list uses iHeartRadio instead of TuneIn.
 
 **NHL non-national games** — ESPN's schedule data doesn't include
 regional-sports-network coverage for most NHL games; an empty broadcast

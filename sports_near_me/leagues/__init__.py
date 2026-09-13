@@ -1,7 +1,14 @@
 from . import mlb, nfl, nhl
 from ._ncaa import NcaaLeague
 
-ncaaf = NcaaLeague("football", "college-football")
+# Verified NCAA football audio flagships - a school's ESPN team id is
+# specific to this one sport (see dynamic_teams.py), so this can't be
+# shared with ncaamb/ncaawb/etc. below even for the same school.
+_NCAAF_KNOWN_AUDIO = {
+    "2633": ("Vol Network (Tennessee)", "https://utsports.com/sports/vol-network"),  # Tennessee Volunteers
+}
+
+ncaaf = NcaaLeague("football", "college-football", known_audio=_NCAAF_KNOWN_AUDIO)
 ncaamb = NcaaLeague("basketball", "mens-college-basketball")
 ncaawb = NcaaLeague("basketball", "womens-college-basketball")
 ncaabsb = NcaaLeague("baseball", "college-baseball")

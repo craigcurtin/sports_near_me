@@ -203,8 +203,19 @@ def audio_note(game: Game) -> str:
     a per-league implementation. Home/Away entries are a specific
     market's real regional broadcast (useful if you're in that market);
     a National entry is the one a remote/out-of-market listener actually
-    wants - both are worth keeping, not just the national one."""
+    wants - both are worth keeping, not just the national one.
+
+    The empty case is deliberately hedged, not a flat "no broadcast":
+    confirmed by hand that ESPN's feed misses real, currently-active
+    flagship stations (WBBM Newsradio has carried every Bears game since
+    2000, under a standing multi-year extension - a Bears game with no
+    audio entry here is ESPN's gap, not evidence WBBM isn't carrying it).
+    Every team in every league covered here has a local flagship
+    station/stream ESPN simply doesn't always report - assume one exists
+    regionally rather than reading a blank line as "nothing airs.\""""
     audio = [b for b in game.broadcasts if b.medium == "Radio"]
     if not audio:
-        return "No audio broadcast listed."
+        return ("None listed in ESPN's data - that's a known gap, not evidence there isn't one. "
+                "Your team's local flagship station/stream almost certainly still carries this "
+                "regionally; check the team's own site/app if you need it.")
     return " | ".join(f"{_MARKET_LABELS.get(b.market_type, b.market_type)}: {b.network}" for b in audio)

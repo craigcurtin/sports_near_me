@@ -8,14 +8,24 @@ from ..resolve import Team, resolve
 
 SPORT, LEAGUE = "football", "nfl"
 
-# Surfaced by cli.py for out-of-market listeners when a game has an audio
-# entry. Westwood One is the NFL's own official national radio/audio
-# partner (confirmed via Cumulus Media's own announcement) and streams
-# every game through its own site/app, not just over the air - all three
-# links verified real before being wired in, same as MLB's.
-AUDIO_INFO_URL = "https://westwoodonesports.com"
-AUDIO_APP_ANDROID_URL = "https://play.google.com/store/apps/details?id=com.westwoodone.sports"
-AUDIO_APP_IOS_URL = "https://apps.apple.com/us/app/westwood-one-sports/id6743144592"
+# Surfaced by cli.py for out-of-market listeners, every game, regardless
+# of what ESPN's own (confirmed incomplete) audio data says. Every entry
+# verified real and free before being wired in - SiriusXM/TuneIn Premium
+# were checked too and deliberately left out: both require a paid
+# subscription for out-of-market NFL games in the US, unlike these two.
+#   - Westwood One: the NFL's own official national radio/audio partner
+#     (confirmed via Cumulus Media's own announcement), one national call
+#     per game, streamed through its own site/app.
+#   - iHeartRadio: free access to each team's own local station stream,
+#     not just one national call - a real complement to Westwood One, not
+#     a duplicate of it.
+OUT_OF_MARKET_AUDIO = [
+    ("Westwood One (national call)", "https://westwoodonesports.com"),
+    ("Westwood One - Android app", "https://play.google.com/store/apps/details?id=com.westwoodone.sports"),
+    ("Westwood One - iOS app", "https://apps.apple.com/us/app/westwood-one-sports/id6743144592"),
+    ("iHeartRadio (free, each team's own station)",
+     "https://www.iheart.com/content/2025-07-31-live-nfl-radio-listen-to-every-game-free-on-iheartradio/"),
+]
 
 # (abbreviation, location, nickname) - matches ESPN's own /teams list.
 _RAW_TEAMS = [
@@ -68,6 +78,27 @@ NATIONAL_NETWORKS = {
 # Sunday afternoon windows - split regionally by affiliate. The only
 # networks this tool can't give a definitive yes/no for.
 REGIONAL_NETWORKS = {"FOX", "CBS"}
+
+
+# Verified regional radio/audio flagships, keyed by team abbreviation.
+# ESPN's own broadcasts data is CONFIRMED incomplete here - a real Bears
+# game came back with no audio entry at all despite WBBM actively
+# carrying every Bears game under a standing multi-year extension (checked
+# by hand, not inferred). This is deliberately a small, honestly-partial
+# table rather than either a blanket "check locally" shrug or a guess at
+# all 32 teams - only entries verified via a real source are here. These
+# ARE real contracts that get renegotiated every several years (the Cubs
+# alone changed flagship stations three times in the last decade - see
+# mlb.py's KNOWN_AUDIO), so each entry should be re-checked periodically,
+# not treated as permanent once true.
+KNOWN_AUDIO = {
+    "CHI": ("WBBM Newsradio 780 AM / 105.9 FM",
+            "https://www.chicagobears.com/audio/listen-live-on-wbbm-newsradio-780-105-9-fm"),
+}
+
+
+def known_audio(team_id: str):
+    return KNOWN_AUDIO.get(team_id)
 
 
 def resolve_team(query: str) -> Team:
