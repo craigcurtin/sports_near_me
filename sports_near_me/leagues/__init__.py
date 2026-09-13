@@ -43,13 +43,13 @@ _NCAAVBW_KNOWN_AUDIO = {
 # Wisconsin, don't sponsor - the Badgers are a women's volleyball power,
 # not a men's program).
 
-ncaaf = NcaaLeague("football", "college-football", known_audio=_NCAAF_KNOWN_AUDIO)
-ncaamb = NcaaLeague("basketball", "mens-college-basketball", known_audio=_NCAAMB_KNOWN_AUDIO)
-ncaawb = NcaaLeague("basketball", "womens-college-basketball", known_audio=_NCAAWB_KNOWN_AUDIO)
-ncaabsb = NcaaLeague("baseball", "college-baseball", known_audio=_NCAABSB_KNOWN_AUDIO)
-ncaamh = NcaaLeague("hockey", "mens-college-hockey", known_audio=_NCAAMH_KNOWN_AUDIO)
-ncaavbw = NcaaLeague("volleyball", "womens-college-volleyball", known_audio=_NCAAVBW_KNOWN_AUDIO)
-ncaavbm = NcaaLeague("volleyball", "mens-college-volleyball")
+ncaaf = NcaaLeague("football", "college-football", "NCAA football", known_audio=_NCAAF_KNOWN_AUDIO)
+ncaamb = NcaaLeague("basketball", "mens-college-basketball", "NCAA men's basketball", known_audio=_NCAAMB_KNOWN_AUDIO)
+ncaawb = NcaaLeague("basketball", "womens-college-basketball", "NCAA women's basketball", known_audio=_NCAAWB_KNOWN_AUDIO)
+ncaabsb = NcaaLeague("baseball", "college-baseball", "NCAA baseball", known_audio=_NCAABSB_KNOWN_AUDIO)
+ncaamh = NcaaLeague("hockey", "mens-college-hockey", "NCAA men's hockey", known_audio=_NCAAMH_KNOWN_AUDIO)
+ncaavbw = NcaaLeague("volleyball", "womens-college-volleyball", "NCAA women's volleyball", known_audio=_NCAAVBW_KNOWN_AUDIO)
+ncaavbm = NcaaLeague("volleyball", "mens-college-volleyball", "NCAA men's volleyball")
 
 # Registry every CLI subcommand and the follow-list config resolve against.
 # Order here is the order subcommands are listed in --help.

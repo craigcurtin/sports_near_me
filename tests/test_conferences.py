@@ -20,13 +20,13 @@ def test_resolve_conference_happy_path():
 def test_resolve_conference_missing_top_level_key_is_empty_not_an_error():
     # "conferences" is read via .get() with a [] default, so a response
     # missing that key entirely resolves to zero conferences (and a plain
-    # ValueError from resolve() - "isn't a team I recognize") rather than
-    # a DataSourceError. What DOES raise DataSourceError is a conference
-    # entry that's present but missing an expected field - see the next
-    # test - which is the shape of a real ESPN-side rename, unlike a
-    # wholesale missing top-level key.
+    # ValueError from resolve() - "doesn't have a conference called")
+    # rather than a DataSourceError. What DOES raise DataSourceError is a
+    # conference entry that's present but missing an expected field - see
+    # the next test - which is the shape of a real ESPN-side rename,
+    # unlike a wholesale missing top-level key.
     with patch("sports_near_me.conferences.fetch_json", return_value={"unexpected": "shape"}):
-        with pytest.raises(ValueError, match="isn't a team I recognize"):
+        with pytest.raises(ValueError, match="doesn't have a conference called"):
             resolve_conference("SEC", "__fake_sport_conf_badshape__", "__fake_league__")
 
 

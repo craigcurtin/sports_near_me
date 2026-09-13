@@ -18,9 +18,16 @@ from ..resolve import resolve
 
 
 class NcaaLeague:
-    def __init__(self, sport: str, league: str, known_audio: dict = None):
+    def __init__(self, sport: str, league: str, label: str, known_audio: dict = None):
         self.SPORT = sport
         self.LEAGUE = league
+        # Human-readable name for this specific sport (e.g. "NCAA men's
+        # hockey") - distinct from SPORT/LEAGUE, which are ESPN's own URL
+        # slugs. Used only to make a resolve() not-found error name the
+        # actual sport that doesn't have the team, e.g. "ESPN's NCAA men's
+        # hockey data doesn't have a team called 'Tennessee'" instead of a
+        # generic "not recognized" that reads like a typo when it isn't one.
+        self.label = label
         # Verified regional radio/audio flagships (school sports networks -
         # Vol Network, Sooner Sports Network, etc.), keyed by the NUMERIC
         # ESPN team id for THIS sport specifically - a school's id differs
@@ -31,10 +38,10 @@ class NcaaLeague:
         self._known_audio = known_audio or {}
 
     def resolve_team(self, query: str):
-        return resolve(query, fetch_all_teams(self.SPORT, self.LEAGUE))
+        return resolve(query, fetch_all_teams(self.SPORT, self.LEAGUE), self.label)
 
     def resolve_conf(self, query: str):
-        return resolve_conference(query, self.SPORT, self.LEAGUE)
+        return resolve_conference(query, self.SPORT, self.LEAGUE, label=self.label)
 
     def conf_members(self, conference_id: str) -> list:
         return conference_members(conference_id, self.SPORT, self.LEAGUE)

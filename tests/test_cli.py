@@ -75,7 +75,7 @@ def test_resolve_explicit_teams_dedupes_by_resolved_id():
 
 
 def test_resolve_explicit_teams_raises_on_one_bad_name():
-    with pytest.raises(ValueError, match="isn't a team I recognize"):
+    with pytest.raises(ValueError, match=r"ESPN's NFL data doesn't have a team called"):
         _resolve_explicit_teams(nfl, "bears,not-a-real-team")
 
 

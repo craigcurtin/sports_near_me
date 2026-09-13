@@ -10,18 +10,18 @@ TEAMS = [
 
 
 def test_exact_match():
-    assert resolve("bears", TEAMS).id == "CHI"
-    assert resolve("CHI", TEAMS).id == "CHI"
-    assert resolve("chicago bears", TEAMS).id == "CHI"
+    assert resolve("bears", TEAMS, "NFL").id == "CHI"
+    assert resolve("CHI", TEAMS, "NFL").id == "CHI"
+    assert resolve("chicago bears", TEAMS, "NFL").id == "CHI"
 
 
 def test_partial_match_unique():
-    assert resolve("chi", TEAMS).id == "CHI"
+    assert resolve("chi", TEAMS, "NFL").id == "CHI"
 
 
 def test_ambiguous_exact_match_raises():
     with pytest.raises(ValueError, match="matches more than one team"):
-        resolve("new york", TEAMS)
+        resolve("new york", TEAMS, "NFL")
 
 
 def test_ambiguous_partial_match_raises():
@@ -32,12 +32,22 @@ def test_ambiguous_partial_match_raises():
     ]
     # "duke" exact-matches only Duke itself (its own search key), so it
     # should resolve cleanly even though "dukes" is a substring collision.
-    assert resolve("duke", partial_teams).id == "DUKE"
+    assert resolve("duke", partial_teams, "NCAA football").id == "DUKE"
     # But a genuine partial-only collision (no exact match anywhere) must raise.
     with pytest.raises(ValueError, match="matches more than one team"):
-        resolve("dukes", partial_teams)
+        resolve("dukes", partial_teams, "NCAA football")
 
 
-def test_unknown_raises():
-    with pytest.raises(ValueError, match="isn't a team I recognize"):
-        resolve("sasquatches", TEAMS)
+def test_unknown_raises_with_sport_and_provider_named():
+    # Specific enough to diagnose: which provider (ESPN), which sport
+    # (NFL), and that the search term genuinely isn't a team there - not
+    # just a generic "not recognized" that reads like a typo when it isn't.
+    with pytest.raises(ValueError, match=r"ESPN's NFL data doesn't have a team called 'sasquatches'"):
+        resolve("sasquatches", TEAMS, "NFL")
+
+
+def test_unknown_uses_the_given_label_and_kind():
+    with pytest.raises(ValueError, match=r"ESPN's NCAA men's hockey data doesn't have a team called 'Tennessee'"):
+        resolve("Tennessee", TEAMS, "NCAA men's hockey")
+    with pytest.raises(ValueError, match=r"doesn't have a conference called 'XYZ'"):
+        resolve("XYZ", TEAMS, "NCAA football", kind="conference")

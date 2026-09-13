@@ -1,5 +1,10 @@
+from unittest.mock import patch
+
+import pytest
+
 from sports_near_me.leagues import ncaabsb, ncaaf, ncaamb, ncaamh, ncaavbm, ncaavbw, ncaawb
 from sports_near_me.leagues._ncaa import NcaaLeague
+from sports_near_me.resolve import Team
 
 
 def test_known_audio_verified_team():
@@ -30,7 +35,7 @@ def test_known_audio_is_per_instance_not_shared_across_sports():
     # regression against a shared mutable default. Also confirms baseball's
     # id ("199") for Tennessee isn't accidentally present under men's
     # basketball, which uses "2633" for the same school.
-    other = NcaaLeague("basketball", "mens-college-basketball")
+    other = NcaaLeague("basketball", "mens-college-basketball", "NCAA men's basketball")
     assert other.known_audio("2633") is None
     assert ncaamb.known_audio("199") is None
 
@@ -45,6 +50,19 @@ def test_known_audio_covers_wisconsin_badger_radio_network_sports():
         station, url = league.known_audio("275")
         assert "Wisconsin" in station
         assert url.startswith("https://")
+
+
+def test_resolve_team_not_found_names_this_specific_ncaa_sport():
+    # Regression for a real-world case: Tennessee has no NCAA men's hockey
+    # team (confirmed absent from ESPN's own 116-team list), so the error
+    # should say exactly that - not a generic "not recognized" that reads
+    # like a typo when the real issue is the team genuinely doesn't play
+    # this sport with this data provider.
+    fake_teams = [Team(id="275", display_name="Wisconsin Badgers", search_keys=("wisconsin", "badgers"))]
+    with patch("sports_near_me.leagues._ncaa.fetch_all_teams", return_value=fake_teams):
+        with pytest.raises(ValueError,
+                            match=r"ESPN's NCAA men's hockey data doesn't have a team called 'Tennessee'"):
+            ncaamh.resolve_team("Tennessee")
 
 
 def test_known_audio_wisconsin_has_no_mens_volleyball_entry():

@@ -69,7 +69,7 @@ def known_audio(team_id: str):
 
 
 def resolve_team(query: str) -> Team:
-    return resolve(query, TEAMS)
+    return resolve(query, TEAMS, "NHL")
 
 
 def broadcast_note(game) -> str:

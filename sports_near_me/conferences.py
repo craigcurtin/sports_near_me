@@ -38,11 +38,14 @@ def _all_conferences(sport: str, league: str) -> list:
     return _conference_cache[key]
 
 
-def resolve_conference(query: str, sport: str, league: str) -> Team:
+def resolve_conference(query: str, sport: str, league: str, label: str = None) -> Team:
     """Returns a Team-shaped object whose id is actually the conference's
     group id - conferences and teams share the same resolve() ambiguity
-    handling, so "ACC" is exactly as safe to type as "Duke" is."""
-    return resolve(query, _all_conferences(sport, league))
+    handling, so "ACC" is exactly as safe to type as "Duke" is. `label`
+    (e.g. "NCAA football") is threaded through to resolve()'s not-found
+    error; falls back to the raw sport/league slugs when no friendlier
+    name is supplied, e.g. by a direct/test call."""
+    return resolve(query, _all_conferences(sport, league), label or f"{sport}/{league}", kind="conference")
 
 
 def conference_members(conference_group_id: str, sport: str, league: str) -> list:
