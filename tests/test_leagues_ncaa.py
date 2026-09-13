@@ -1,4 +1,4 @@
-from sports_near_me.leagues import ncaabsb, ncaaf, ncaamb, ncaawb
+from sports_near_me.leagues import ncaabsb, ncaaf, ncaamb, ncaamh, ncaavbm, ncaavbw, ncaawb
 from sports_near_me.leagues._ncaa import NcaaLeague
 
 
@@ -33,3 +33,24 @@ def test_known_audio_is_per_instance_not_shared_across_sports():
     other = NcaaLeague("basketball", "mens-college-basketball")
     assert other.known_audio("2633") is None
     assert ncaamb.known_audio("199") is None
+
+
+def test_known_audio_covers_wisconsin_badger_radio_network_sports():
+    # Confirmed via research: Matt Lepay calls football + men's basketball,
+    # Jon Arias calls women's basketball + volleyball, Brian Posick calls
+    # men's hockey - all the same "Wisconsin Badgers Sports Network," which
+    # is why the station name/URL repeats across these entries rather than
+    # needing separate verification per sport.
+    for league in (ncaaf, ncaamb, ncaawb, ncaamh, ncaavbw):
+        station, url = league.known_audio("275")
+        assert "Wisconsin" in station
+        assert url.startswith("https://")
+
+
+def test_known_audio_wisconsin_has_no_mens_volleyball_entry():
+    # Deliberate absence, not an oversight: Wisconsin doesn't field a
+    # men's volleyball program at all (confirmed absent from ESPN's own
+    # mens-college-volleyball team list) - the Badgers are a women's
+    # volleyball power, not a men's program, so there's nothing true to
+    # verify and add here.
+    assert ncaavbm.known_audio("275") is None

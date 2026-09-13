@@ -22,20 +22,33 @@ _NCAAF_KNOWN_AUDIO = {
 }
 _NCAAMB_KNOWN_AUDIO = {
     "2633": ("Vol Network (Tennessee)", "https://utsports.com/sports/vol-network"),  # Tennessee Volunteers
+    "275": ("Wisconsin Badgers Sports Network", "https://uwbadgers.com/coverage"),  # Wisconsin Badgers - Matt Lepay calls football + men's basketball, same network as ncaaf's entry
 }
 _NCAAWB_KNOWN_AUDIO = {
     "2633": ("Vol Network (Tennessee)", "https://utsports.com/sports/vol-network"),  # Tennessee Lady Volunteers
+    "275": ("Wisconsin Badgers Sports Network", "https://uwbadgers.com/coverage"),  # Wisconsin Badgers - Jon Arias calls women's basketball + volleyball
 }
 _NCAABSB_KNOWN_AUDIO = {
     "199": ("Vol Network (Tennessee)", "https://utsports.com/sports/vol-network"),  # Tennessee Volunteers - different id than football/basketball
 }
+_NCAAMH_KNOWN_AUDIO = {
+    "275": ("Wisconsin Badgers Sports Network", "https://uwbadgers.com/coverage"),  # Wisconsin Badgers - Brian Posick calls men's hockey
+}
+_NCAAVBW_KNOWN_AUDIO = {
+    "275": ("Wisconsin Badgers Sports Network", "https://uwbadgers.com/coverage"),  # Wisconsin Badgers - Jon Arias calls volleyball (same network as ncaawb's entry)
+}
+# No _NCAAVBM_KNOWN_AUDIO: Wisconsin has no men's volleyball program at
+# all (confirmed - absent from ESPN's 75-team mens-college-volleyball
+# list; it's a niche varsity sport most Big Ten schools, including
+# Wisconsin, don't sponsor - the Badgers are a women's volleyball power,
+# not a men's program).
 
 ncaaf = NcaaLeague("football", "college-football", known_audio=_NCAAF_KNOWN_AUDIO)
 ncaamb = NcaaLeague("basketball", "mens-college-basketball", known_audio=_NCAAMB_KNOWN_AUDIO)
 ncaawb = NcaaLeague("basketball", "womens-college-basketball", known_audio=_NCAAWB_KNOWN_AUDIO)
 ncaabsb = NcaaLeague("baseball", "college-baseball", known_audio=_NCAABSB_KNOWN_AUDIO)
-ncaamh = NcaaLeague("hockey", "mens-college-hockey")
-ncaavbw = NcaaLeague("volleyball", "womens-college-volleyball")
+ncaamh = NcaaLeague("hockey", "mens-college-hockey", known_audio=_NCAAMH_KNOWN_AUDIO)
+ncaavbw = NcaaLeague("volleyball", "womens-college-volleyball", known_audio=_NCAAVBW_KNOWN_AUDIO)
 ncaavbm = NcaaLeague("volleyball", "mens-college-volleyball")
 
 # Registry every CLI subcommand and the follow-list config resolve against.
