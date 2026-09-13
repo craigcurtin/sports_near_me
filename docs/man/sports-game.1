@@ -1,0 +1,185 @@
+.TH SPORTS-GAME 1 "2026-09-13" "sports_near_me 0.1.0" "User Commands"
+.SH NAME
+sports-game \- show when a followed team plays next, and how to watch or listen
+.SH SYNOPSIS
+.B sports-game
+.RI [ shared-options ]
+.RI [ sport
+.RI [ team ]]
+.SH DESCRIPTION
+.B sports-game
+looks up a team's next scheduled game (or a specific week's game) from
+ESPN's public schedule data and prints kickoff time, venue, and how the
+game is broadcast \(em television/streaming and radio, reported
+separately.
+.PP
+It covers ten leagues: NFL, MLB, NHL, NCAA football, NCAA men's and
+women's basketball, NCAA baseball, NCAA men's hockey, and NCAA men's and
+women's volleyball.
+.PP
+Run with a
+.I sport
+and
+.I team
+for one specific lookup. Run with just a
+.I sport
+to show every team (and every team in every followed conference) from
+your config file's follow list for that sport. Run with
+.B no arguments at all
+to show your entire follow list across every sport.
+.PP
+Team names resolve loosely: a nickname, city, full team name, or league
+abbreviation all work (\fBbears\fR, \fBchicago\fR, \fB"chicago bears"\fR,
+\fBCHI\fR are all the Chicago Bears). A name that matches more than one
+team \(em e.g. \fBnew york\fR, which is both the Giants and the Jets \(em
+is refused with the list of real matches rather than guessed at.
+.SH SPORTS
+.TP
+.B nfl
+National Football League
+.TP
+.B mlb
+Major League Baseball. The only league where ESPN reports the real
+National/Home/Away broadcast split per game \(em see
+.B BROADCAST NOTES
+below.
+.TP
+.B nhl
+National Hockey League
+.TP
+.B ncaaf
+NCAA football
+.TP
+.B ncaamb
+NCAA men's basketball
+.TP
+.B ncaawb
+NCAA women's basketball
+.TP
+.B ncaabsb
+NCAA baseball
+.TP
+.B ncaamh
+NCAA men's hockey
+.TP
+.B ncaavbw
+NCAA women's volleyball
+.TP
+.B ncaavbm
+NCAA men's volleyball
+.PP
+Every NCAA sport supports following a whole conference (see
+.BR sports_near_me.yaml (5))
+\(em team and conference names for NCAA sports are resolved against
+ESPN's live team/conference lists on every run, not a hardcoded table,
+since a handful of hundred-plus-school sports would be impractical to
+hand-maintain and conference realignment does happen.
+.SH OPTIONS
+.TP
+.BI \-\-config " path"
+Path to a YAML config file. Default: \fI~/.sports_near_me.yaml\fR if it
+exists; if omitted and no default file exists, only explicit
+.I sport team
+lookups work \(em there is no follow list to fall back to.
+.TP
+.BI \-\-week " N"
+Show a specific week's game instead of the next upcoming one. Only
+meaningful for \fBnfl\fR and \fBncaaf\fR, which carry week numbers;
+other sports ignore it.
+.TP
+.BI \-\-tz " zone"
+IANA timezone for the printed kickoff time (e.g.
+.IR America/Chicago ).
+Default: this machine's local timezone.
+.TP
+.BI \-\-log\-dir " dir"
+Also write a timestamped diagnostic log file under
+.I dir
+(created if needed), in addition to stderr. Diagnostics never appear in
+the report itself (stdout).
+.TP
+.BI \-\-log\-level " LEVEL"
+One of \fBDEBUG\fR, \fBINFO\fR, \fBWARNING\fR, \fBERROR\fR,
+\fBCRITICAL\fR. Default: \fBINFO\fR. Mutually exclusive with
+.B \-\-verbose
+and
+.BR \-\-silent .
+.TP
+.BR \-v ", " \-\-verbose
+Shortcut for \fB\-\-log\-level DEBUG\fR.
+.TP
+.BR \-s ", " \-\-silent
+Shortcut for \fB\-\-log\-level ERROR\fR \(em only the report and real
+errors are printed.
+.SH BROADCAST NOTES
+The
+.B TV
+line and
+.B Radio
+line are always printed separately, whatever ESPN reports for the game.
+Classification differs by league because the underlying broadcast
+systems genuinely differ:
+.TP
+.B NFL
+Flagship windows and streaming exclusives (NBC, ESPN/ABC, Prime Video,
+NFL Network, Peacock, Netflix) are flagged as reaching every market.
+FOX/CBS Sunday-window games cannot be resolved to a specific market by
+this tool \(em that depends on affiliate coverage maps that
+.B sports-game
+has no access to (the sites that publish them block automated
+requests). Check the NFL app's "Local" tab for those.
+.TP
+.B MLB
+ESPN reports the actual National/Home/Away split per game, so
+.B sports-game
+prints all of it directly \(em e.g. national streaming on MLB.TV plus
+each team's own regional network. A note about MLB.TV's blackout of
+both teams' home markets is appended when relevant.
+.TP
+.B NCAA (all six sports) and NHL national games
+A conference or league TV/streaming deal is one single
+nationally-distributed feed of that specific game, not a regional split
+\(em you just need the matching cable/streaming access.
+.TP
+.B NHL non-national games
+ESPN's schedule data does not include regional-sports-network coverage
+for most NHL games; an empty broadcast line there means "check your
+team's local RSN or streaming app," not "nothing airs."
+.SH EXIT STATUS
+.TP
+.B 0
+At least one game report was printed successfully.
+.TP
+.B 1
+No team/sport was resolvable, the config file was invalid or missing
+when explicitly requested, or nothing could be shown at all.
+.SH FILES
+.TP
+.I ~/.sports_near_me.yaml
+Default config file. See
+.BR sports_near_me.yaml (5).
+.SH EXAMPLES
+.TP
+Look up one team directly:
+.B sports-game nfl bears
+.TP
+A specific week:
+.B sports-game ncaaf "ohio state" \-\-week 3
+.TP
+Show every NCAA football team/conference you follow:
+.B sports-game ncaaf
+.TP
+Show your entire follow list, every sport:
+.B sports-game
+.TP
+Use a specific config file:
+.B sports-game \-\-config ~/work/sports.yaml mlb cubs
+.SH SEE ALSO
+.BR sports_near_me.yaml (5),
+.BR sports-game-launchers (7)
+.SH NOTES
+No team or conference id is ever cached or written to disk \(em every
+name is resolved fresh against ESPN's live data on each run. See
+.I docs/EXTENDING.md
+in the project source for why that matters and how to add another
+league.

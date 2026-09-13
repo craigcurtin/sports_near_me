@@ -1,0 +1,175 @@
+"""
+Generic ESPN site-API schedule fetch, shared by every league.
+
+Two ESPN quirks this module works around, both confirmed by hand before
+writing the fix (see the project's session history, not repeated here):
+
+1. Team identity for the URL path is the numeric competitor id for NCAA
+   (abbreviation routing collides there - .../teams/osu/schedule silently
+   answers with a small branch-campus team, not Ohio State) but the plain
+   abbreviation for NFL/MLB/NHL (those route correctly, no extra lookup
+   needed). Game.home_id/away_id store BOTH forms per team precisely
+   because of that split - is_home_for()/opponent_name_for() have to match
+   against whichever form the caller's Team.id happens to be, or a league
+   using abbreviations (MLB) would never match its own numeric competitor
+   ids and every home/away call would silently return the wrong team.
+2. The schedule endpoint's default "season" is inconsistent per sport, AND
+   college sports don't agree whether "season N" means the year it starts
+   or the year it ends (confirmed: NCAA men's basketball's season=2026 is
+   the already-finished 2025-26 season, not 2026-27). fetch_schedule()
+   retries with explicit season guesses when the default has no upcoming
+   game, but only trusts a guess that itself has an upcoming game - see
+   _has_upcoming_event()'s docstring for why that guard exists.
+"""
+
+import json
+import urllib.request
+from dataclasses import dataclass, field
+from datetime import date, datetime, timezone
+from typing import Optional
+
+SCHEDULE_URL = "https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams/{team_id}/schedule"
+
+
+@dataclass(frozen=True)
+class Broadcast:
+    network: str
+    medium: str        # "TV" or "Streaming"
+    market_type: str   # "National", "Home", "Away" - as ESPN reports it
+
+
+@dataclass(frozen=True)
+class Game:
+    event_id: str
+    name: str
+    kickoff_utc: datetime
+    week: Optional[int]
+    home_id: str
+    away_id: str
+    home_abbr: str
+    away_abbr: str
+    home_name: str
+    away_name: str
+    venue_name: str
+    venue_city: str
+    venue_state: str
+    broadcasts: list = field(default_factory=list)
+    completed: bool = False
+
+    def is_home_for(self, team_id: str) -> bool:
+        return team_id in (self.home_id, self.home_abbr)
+
+    def opponent_name_for(self, team_id: str) -> str:
+        return self.away_name if self.is_home_for(team_id) else self.home_name
+
+
+def _fetch_raw(url: str) -> dict:
+    with urllib.request.urlopen(url, timeout=10) as response:
+        return json.load(response)
+
+
+def _has_upcoming_event(data: dict) -> bool:
+    now = datetime.now(timezone.utc)
+    for event in data.get("events", []):
+        completed = event["competitions"][0].get("status", {}).get("type", {}).get("completed", False)
+        if completed:
+            continue
+        kickoff = datetime.strptime(event["date"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
+        if kickoff >= now:
+            return True
+    return False
+
+
+def fetch_schedule(sport: str, league: str, team_id: str) -> list:
+    """One season's worth of games for the given team id, in the order
+    ESPN returns them (chronological in practice).
+
+    If the default response has no upcoming game, retries with an explicit
+    season - confirmed necessary for some sports (NCAA men's basketball)
+    and not others. Critically, a retried season is only trusted if IT ALSO
+    has an upcoming game: college sports don't agree on whether "season N"
+    means the year it starts or the year it ends, and blindly trusting any
+    non-empty retry once produced a fully-completed PAST season presented
+    as if it were current (Duke men's basketball's already-finished
+    2025-26 season, under season=2026) - worse than the honest empty
+    result it was "fixing." If neither guess turns up anything upcoming,
+    that's reported as-is: the schedule genuinely isn't published yet."""
+    url = SCHEDULE_URL.format(sport=sport, league=league, team_id=team_id)
+    data = _fetch_raw(url)
+
+    if not _has_upcoming_event(data):
+        today = date.today()
+        for season in (today.year, today.year + 1):
+            candidate = _fetch_raw(f"{url}?season={season}")
+            if _has_upcoming_event(candidate):
+                data = candidate
+                break
+
+    games = []
+    for event in data.get("events", []):
+        competition = event["competitions"][0]
+        venue = competition.get("venue", {})
+        address = venue.get("address", {})
+
+        home_id = home_abbr = home_name = away_id = away_abbr = away_name = None
+        for competitor in competition.get("competitors", []):
+            team = competitor["team"]
+            name = team.get("displayName") or team.get("name", "")
+            abbr = team.get("abbreviation", "")
+            if competitor["homeAway"] == "home":
+                home_id, home_abbr, home_name = team["id"], abbr, name
+            else:
+                away_id, away_abbr, away_name = team["id"], abbr, name
+
+        broadcasts = [
+            Broadcast(
+                network=b["media"]["shortName"],
+                medium=b["type"]["shortName"],
+                market_type=b["market"]["type"],
+            )
+            for b in competition.get("broadcasts", [])
+        ]
+
+        games.append(Game(
+            event_id=event["id"],
+            name=event["name"],
+            kickoff_utc=datetime.strptime(event["date"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc),
+            week=event.get("week", {}).get("number"),
+            home_id=home_id,
+            away_id=away_id,
+            home_abbr=home_abbr,
+            away_abbr=away_abbr,
+            home_name=home_name,
+            away_name=away_name,
+            venue_name=venue.get("fullName", ""),
+            venue_city=address.get("city", ""),
+            venue_state=address.get("state", ""),
+            broadcasts=broadcasts,
+            completed=competition.get("status", {}).get("type", {}).get("completed", False),
+        ))
+    return games
+
+
+def next_game(games: list, now: Optional[datetime] = None) -> Optional[Game]:
+    now = now or datetime.now(timezone.utc)
+    upcoming = [g for g in games if g.kickoff_utc >= now and not g.completed]
+    return min(upcoming, key=lambda g: g.kickoff_utc) if upcoming else None
+
+
+def game_for_week(games: list, week: int) -> Optional[Game]:
+    matches = [g for g in games if g.week == week]
+    return matches[0] if matches else None
+
+
+_MARKET_LABELS = {"National": "National", "Home": "Home", "Away": "Away"}
+
+
+def radio_note(game: Game) -> str:
+    """Generic across every league - radio doesn't have NFL's regional-map
+    ambiguity problem, it's just "this station carries it," so one shared
+    formatter (grouped the same National/Home/Away way MLB's TV data is)
+    covers every sport rather than needing a per-league implementation."""
+    radios = [b for b in game.broadcasts if b.medium == "Radio"]
+    if not radios:
+        return "No radio broadcast listed."
+    return " | ".join(f"{_MARKET_LABELS.get(b.market_type, b.market_type)}: {b.network}" for b in radios)

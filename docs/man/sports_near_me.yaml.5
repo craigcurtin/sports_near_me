@@ -1,0 +1,105 @@
+.TH SPORTS_NEAR_ME.YAML 5 "2026-09-13" "sports_near_me 0.1.0" "File Formats"
+.SH NAME
+sports_near_me.yaml \- config file for sports-game(1)
+.SH SYNOPSIS
+.I ~/.sports_near_me.yaml
+.SH DESCRIPTION
+A YAML file of shared defaults and a per-sport
+.B follow
+list, read by
+.BR sports-game (1)
+on every invocation. Every key is optional. A command-line flag always
+overrides the matching shared key; the follow list is only consulted
+when no team is given on the command line.
+.PP
+The file is looked up at
+.I ~/.sports_near_me.yaml
+by default, or at the path given with
+.BR sports-game 's
+.B \-\-config
+flag. Passing
+.B \-\-config
+with a path that does not exist is an error; the default path silently
+not existing is not \(em most people will not have created it yet.
+.SH SHARED KEYS
+.TP
+.B tz
+IANA timezone string (e.g.
+.IR America/New_York )
+used for every printed kickoff time. Overridden by
+.BR sports-game 's
+.B \-\-tz
+flag. Default: the machine's local timezone.
+.TP
+.B log_level
+One of \fBDEBUG\fR, \fBINFO\fR, \fBWARNING\fR, \fBERROR\fR,
+\fBCRITICAL\fR. Default: \fBINFO\fR.
+.TP
+.B log_dir
+Directory to also write a timestamped diagnostic log file to. Default:
+none (diagnostics go to stderr only).
+.SH THE FOLLOW LIST
+.B follow
+is a mapping from sport key (see
+.BR sports-game (1)'s
+.B SPORTS
+section \(em \fBnfl\fR, \fBmlb\fR, \fBnhl\fR, \fBncaaf\fR, \fBncaamb\fR,
+\fBncaawb\fR, \fBncaabsb\fR, \fBncaamh\fR, \fBncaavbw\fR, \fBncaavbm\fR)
+to an object with either or both of:
+.TP
+.B teams
+A list of team names, in the same loose form
+.BR sports-game (1)
+accepts on the command line (nickname, city, full name, or
+abbreviation).
+.TP
+.B conferences
+A list of conference names (e.g. \fBSEC\fR, \fBBig Ten\fR, \fBACC\fR).
+.B NCAA sports only
+\(em \fBnfl\fR, \fBmlb\fR, and \fBnhl\fR have no conference concept
+here and any entry under their
+.B conferences
+key is skipped with a warning, not an error.
+.PP
+Following a conference follows every current member team's entire
+schedule, including non-conference and cross-conference games \(em not
+just games against other conference members. Membership is looked up
+fresh each run (see
+.BR NOTES ),
+so realignment is reflected automatically.
+.PP
+A team reachable both directly (under
+.BR teams )
+and via a followed conference is only shown once.
+.SH EXAMPLE
+.nf
+.RS
+tz: America/New_York
+log_level: INFO
+# log_dir: ~/.sports_near_me/logs
+
+follow:
+  nfl:
+    teams: [Bears]
+  mlb:
+    teams: [Cubs]
+  nhl:
+    teams: [Blackhawks]
+  ncaaf:
+    teams: [Notre Dame]          # independent \- not in any conference
+    conferences: [SEC, Big Ten]
+  ncaamb:
+    conferences: [ACC]            # every ACC team \- Duke, UNC, Louisville...
+  ncaawb:
+    teams: [Duke]
+.RE
+.fi
+.SH NOTES
+Nothing under
+.B follow
+is, or ever becomes, a stored id. Every team and conference name here is
+re-resolved against ESPN's live data on each run of
+.BR sports-game (1);
+this file only ever holds what a person typed.
+.SH SEE ALSO
+.BR sports-game (1)

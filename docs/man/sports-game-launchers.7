@@ -1,0 +1,94 @@
+.TH SPORTS-GAME-LAUNCHERS 7 "2026-09-13" "sports_near_me 0.1.0" "Miscellaneous"
+.SH NAME
+sports-game-launchers \- per-platform scripts that run sports-game(1)
+without a manual install
+.SH SYNOPSIS
+.B scripts/sports-game.sh
+.RI [ args ...]
+.RI ( macOS/Linux )
+.PP
+.B scripts\esports-game.cmd
+.RI [ args ...]
+.RI ( "Windows cmd.exe" )
+.PP
+.B scripts/sports-game.ps1
+.RI [ args ...]
+.RI ( "PowerShell, Windows or cross-platform" )
+.SH DESCRIPTION
+These three scripts are equivalent entry points into
+.BR sports-game (1)
+for someone who does not want to run
+.B pip install
+by hand. Each one, on first run only:
+.IP 1. 4
+Creates a virtual environment at
+.I .venv
+next to the project root, if one is not already there.
+.IP 2. 4
+Installs this package into it (editable install), along with its one
+dependency, PyYAML.
+.PP
+On every run \(em first or subsequent \(em the script then execs
+.BR sports-game (1)
+inside that virtual environment, forwarding every argument unchanged.
+There is no functional difference between running a launcher script and
+running
+.B sports-game
+directly after a manual
+.BR "pip install \-e ." ;
+the scripts exist purely so a non-technical user can double-click or
+run one command on whichever platform they have, without knowing what a
+virtual environment is.
+.SH USAGE
+The argument forwarding means every
+.BR sports-game (1)
+invocation shown in that man page works identically through any
+launcher, e.g.:
+.PP
+.RS
+.nf
+\&./scripts/sports\-game.sh nfl bears
+scripts\esports\-game.cmd nfl bears
+\&./scripts/sports\-game.ps1 nfl bears
+.fi
+.RE
+.SH FILES
+.TP
+.I .venv/
+The bootstrapped virtual environment. Safe to delete at any time; the
+next launcher run recreates it.
+.SH PLATFORM NOTES
+.TP
+.B sports-game.sh
+Requires
+.B python3
+(or
+.BR python )
+on
+.BR PATH .
+Uses
+.B set \-euo pipefail
+so a setup failure stops the script rather than falling through to a
+broken run.
+.TP
+.B sports-game.cmd
+Requires
+.B python
+on
+.BR PATH .
+Each setup step is checked; a failure prints a one-line hint about
+Python/PATH rather than a raw traceback.
+.TP
+.B sports-game.ps1
+Works under both Windows PowerShell 5.1 and cross-platform PowerShell
+7+ (including on macOS/Linux, where it is a third option alongside the
+.B .sh
+script). Detects the platform via
+.I $env:OS
+rather than the newer
+.I $IsWindows
+automatic variable, since the latter does not exist under Windows
+PowerShell 5.1.
+.SH SEE ALSO
+.BR sports-game (1),
+.BR sports_near_me.yaml (5)

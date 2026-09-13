@@ -1,0 +1,32 @@
+# Copy this file to ~/.sports_near_me.yaml (or pass --config <path>) so
+# "sports-game" with no arguments shows every team/conference you follow.
+#
+# Every key is optional, and a CLI flag always overrides a shared one
+# (tz/log_level/log_dir). Nothing here is an id - team and conference names
+# are resolved fresh against ESPN's live data every run, never cached, so a
+# realignment or an ESPN-side id change just shows up next time you run it.
+
+tz: America/New_York
+log_level: INFO
+# log_dir: ~/.sports_near_me/logs   # uncomment to also write timestamped log files
+
+follow:
+  nfl:
+    teams: [Bears]
+  mlb:
+    teams: [Cubs]
+  nhl:
+    teams: [Blackhawks]
+  ncaaf:
+    teams: [Notre Dame]       # independent - not in any conference
+    conferences: [SEC, Big Ten]
+  ncaamb:
+    conferences: [ACC]         # every ACC men's basketball team, e.g. Duke
+  ncaawb:
+    teams: [Duke]
+  # ncaabsb, ncaamh, ncaavbw, ncaavbm work the same way (teams: / conferences:)
+
+# Run "sports-game" alone to see every team/conference above, one game each.
+# Run "sports-game ncaaf" to see just the NCAA football list.
+# Run "sports-game ncaaf 'Ohio State'" for one specific team, ignoring the
+# follow list entirely for that run.
