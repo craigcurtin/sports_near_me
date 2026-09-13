@@ -22,7 +22,13 @@ Run with a
 .I sport
 and
 .I team
-for one specific lookup. Run with just a
+for one specific lookup. The
+.I team
+argument also accepts a comma-separated list (
+.BR "tennessee,wisconsin" )
+to look up several teams in one run without a config file \(em each name
+resolves through the same rules as a single-team lookup, and the result
+is deduplicated by resolved team. Run with just a
 .I sport
 to show every team (and every team in every followed conference) from
 your config file's follow list for that sport. Run with
@@ -33,7 +39,10 @@ Team names resolve loosely: a nickname, city, full team name, or league
 abbreviation all work (\fBbears\fR, \fBchicago\fR, \fB"chicago bears"\fR,
 \fBCHI\fR are all the Chicago Bears). A name that matches more than one
 team \(em e.g. \fBnew york\fR, which is both the Giants and the Jets \(em
-is refused with the list of real matches rather than guessed at.
+is refused with the list of real matches rather than guessed at. This
+applies to each name in a comma-separated list too \(em one bad or
+ambiguous name fails the whole lookup with a clear error, rather than
+silently skipping it.
 .SH SPORTS
 .TP
 .B nfl
@@ -221,6 +230,9 @@ Default config file. See
 .TP
 Look up one team directly:
 .B sports-game nfl bears
+.TP
+Several teams in one run:
+.B sports-game ncaaf "tennessee,wisconsin"
 .TP
 A specific numbered week:
 .B sports-game ncaaf tennessee \-\-week 3

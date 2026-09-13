@@ -3,9 +3,10 @@
 When do the teams you follow play next, and can you actually watch or listen?
 
 ```
-$ sports-game mlb cubs
-As of: Sunday, September 13, 2026  08:30 AM EDT - schedules can change after this.
+$ sports-game mlb "cubs,brewers"
+As of: Sunday, September 13, 2026  08:39 AM EDT - schedules can change after this.
 
+=== MLB: Chicago Cubs ===
 Game: Chicago Cubs vs. Pittsburgh Pirates
 Kickoff: Sunday, September 13, 2026  02:20 PM EDT
 Venue:   Wrigley Field (Chicago, Illinois)
@@ -19,7 +20,24 @@ Audio:   None listed in ESPN's data - that's a known gap, not evidence there isn
          Out-of-market listeners:
            MLB Audio subscription: https://www.mlb.com/live-stream-games/subscribe/mlb-audio
 More at: https://www.espn.com/mlb/game/_/gameId/401816929/pirates-cubs
+
+=== MLB: Milwaukee Brewers ===
+Game: Milwaukee Brewers vs. Cincinnati Reds
+Kickoff: Sunday, September 13, 2026  02:10 PM EDT
+Venue:   American Family Field (Milwaukee, Wisconsin)
+TV:      National: MLB.TV (Streaming) | Away broadcast: Reds.TV (Streaming) | Home
+         broadcast: Brewers.TV (Streaming)  [MLB.TV blacks out both teams' home
+         markets - if you're in one of those two, use the Home/Away channel instead.]
+Audio:   None listed in ESPN's data - that's a known gap, not evidence there isn't
+         one. Your team's local flagship station/stream almost certainly still
+         carries this regionally; check the team's own site/app if you need it.
+         Out-of-market listeners:
+           MLB Audio subscription: https://www.mlb.com/live-stream-games/subscribe/mlb-audio
+More at: https://www.espn.com/mlb/game/_/gameId/401816927/reds-brewers
 ```
+
+A single run can look up several teams at once - just comma-separate
+them (`"cubs,brewers"` above).
 
 Ten leagues, one tool: **NFL, MLB, NHL, NCAA football, NCAA men's/women's
 basketball, NCAA baseball, NCAA men's hockey, NCAA men's/women's volleyball.**
@@ -184,6 +202,7 @@ is needed at all.
 
 ```bash
 sports-game <sport> <team>
+sports-game <sport> "<team>,<team>,..."    # several teams, one run - no config file needed
 sports-game <sport> <team> --week 5        # a numbered week - football only
 sports-game <sport> <team> --range 1d      # every game today (incl. already finished)
 sports-game <sport> <team> --range 7d      # every game in the next 7 days

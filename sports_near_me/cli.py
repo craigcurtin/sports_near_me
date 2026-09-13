@@ -30,9 +30,28 @@ def build_arg_parser() -> argparse.ArgumentParser:
     for name in LEAGUES:
         sub = subparsers.add_parser(name, help=name.upper())
         sub.add_argument("team", nargs="?", default=None,
-                          help="A specific team - overrides your config's follow list for this run.")
+                          help="A specific team, or a comma-separated list (e.g. "
+                               "'tennessee,wisconsin') - overrides your config's follow "
+                               "list for this run.")
         add_shared_flags(sub)
     return parser
+
+
+def _resolve_explicit_teams(league, raw: str) -> list:
+    """Resolves a command-line team argument, which may be a single name
+    or a comma-separated list ("tennessee,wisconsin") - each name goes
+    through the exact same league.resolve_team() a single-team lookup
+    uses, so ambiguity/not-found errors are exactly as specific either
+    way. Deduplicated by resolved id (same reasoning as
+    _followed_teams_for()'s dedup), in case two different spellings in
+    the list point at the same team."""
+    teams_by_id = {}
+    for name in (n.strip() for n in raw.split(",")):
+        if not name:
+            continue
+        team = league.resolve_team(name)
+        teams_by_id[team.id] = team
+    return list(teams_by_id.values())
 
 
 def _followed_teams_for(sport: str, follow_cfg: dict) -> list:
@@ -186,13 +205,14 @@ def run(argv=None) -> int:
         explicit_team = args.sport and getattr(args, "team", None)
         if explicit_team:
             try:
-                jobs.append((sport, league.resolve_team(args.team)))
+                teams = _resolve_explicit_teams(league, args.team)
             except ValueError as e:
                 print(f"error: {e}", file=sys.stderr)
                 return 1
             except DataSourceError as e:
                 _report_data_source_error(e)
                 return 1
+            jobs.extend((sport, t) for t in teams)
             continue
 
         try:
