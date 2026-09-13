@@ -29,7 +29,11 @@ IANA timezone string (e.g.
 used for every printed kickoff time. Overridden by
 .BR sports-game 's
 .B \-\-tz
-flag. Default: the machine's local timezone.
+flag. Default:
+.BR UTC \(em
+never guessed from the machine's own clock, since this file can be
+copied to a different machine/location. Set this to see local kickoff
+times.
 .TP
 .B log_level
 One of \fBDEBUG\fR, \fBINFO\fR, \fBWARNING\fR, \fBERROR\fR,

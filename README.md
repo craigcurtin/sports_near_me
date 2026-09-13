@@ -3,14 +3,17 @@
 When do the teams you follow play next, and can you actually watch or listen?
 
 ```
-$ sports-game mlb cubs
+$ sports-game mlb cubs --tz America/Chicago
+As of: Sunday, September 13, 2026  06:39 AM CDT - schedules can change after this.
+
 Game: Chicago Cubs vs. Pittsburgh Pirates
-Kickoff: Sunday, September 13, 2026  02:20 PM EDT
+Kickoff: Sunday, September 13, 2026  01:20 PM CDT
 Venue:   Wrigley Field (Chicago, Illinois)
 TV:      National: MLB.TV (Streaming) | Home broadcast: Marquee Sports Net (TV)  [MLB.TV
          blacks out both teams' home markets - if you're in one of those two, use the
          Home/Away channel listed instead.]
-Radio:   No radio broadcast listed.
+Audio:   No audio broadcast listed.
+More at: https://www.espn.com/mlb/game/_/gameId/401816929/pirates-cubs
 ```
 
 Ten leagues, one tool: **NFL, MLB, NHL, NCAA football, NCAA men's/women's
@@ -62,25 +65,34 @@ conference members.
 
 - **Kickoff time, opponent, venue** - pulled live from ESPN's public
   schedule API, no API key needed.
-- **TV/streaming and radio, shown separately** - every broadcast ESPN
-  reports for the game, split into a `TV:` line and a `Radio:` line.
+- **An "As of" timestamp on every report.** Schedules change - weather
+  postponements, doubleheaders, flexed games - so every run prints when
+  the data was actually fetched, in the display timezone, right at the top.
+- **TV/streaming and audio, shown separately, plus a direct link to the
+  game's ESPN page** - every broadcast ESPN reports, split into a `TV:`
+  line and an `Audio:` line (called "Audio," not "Radio" - most of what's
+  listed here is consumed as internet audio today, not strictly AM/FM),
+  followed by a `More at:` link straight to that game's ESPN Gamecast page.
 - **MLB** gets the most precise answer of any league here: ESPN reports
   the real National/Home/Away broadcast split per game (e.g. "national
   streaming on MLB.TV" + "home broadcast: Marquee Sports Net" + "away
   broadcast: Nationals.TV"), including the MLB.TV blackout caveat for
-  the two teams' home markets.
+  the two teams' home markets. When a game has an audio entry, MLB also
+  gets a direct link to MLB's own audio-streaming subscription plus the
+  official MLB App (iOS and Android) - useful for an out-of-market listener.
 - **NCAA** (all six sports) and **NHL** national broadcasts are flagged as
   a single nationally-distributed feed once you have the right cable/
   streaming access - not a regional-map question.
-- **What it can't do**: tell you whether a specific NFL FOX/CBS Sunday-
-  window game reaches *your* zip code. That depends on affiliate-level
-  regional broadcast maps that differ market by market, and the sites
-  that publish those maps (506sports.com and similar) block automated
-  requests - the NFL app's "Local" tab is the reliable source for that
-  one case. NHL is similar in spirit: ESPN's schedule data doesn't
-  include regional-sports-network coverage at all for most non-national
-  games, so an empty broadcast there means "check your team's local
-  RSN/app," not "nothing airs."
+- **NFL's regional Sunday windows** get a real, verified pointer:
+  [thesportsmaps.com](https://thesportsmaps.com/nfl/) publishes a live,
+  searchable county/zip-level coverage map (checked and confirmed working
+  before linking it here) - the closest thing to a real answer for "will
+  I get this game," short of the NFL app's own "Local" tab.
+- **What it still can't do**: resolve that FOX/CBS question itself, or
+  give you a specific link for NHL's non-national games - ESPN's schedule
+  data doesn't include regional-sports-network coverage at all for most
+  of those, so an empty broadcast line there means "check your team's
+  local RSN/app," not "nothing airs."
 
 ## Nothing here is a cached id
 
@@ -107,7 +119,9 @@ is needed at all.
 
 ```bash
 sports-game <sport> <team>
-sports-game <sport> <team> --week 5        # football only; other sports ignore this
+sports-game <sport> <team> --week 5        # a numbered week - football only
+sports-game <sport> <team> --range 1d      # every game today (incl. already finished)
+sports-game <sport> <team> --range 7d      # every game in the next 7 days
 sports-game <sport> <team> --tz America/Chicago
 sports-game <sport> <team> --verbose       # DEBUG-level diagnostics on stderr
 sports-game <sport> <team> --silent        # only the report and real errors
@@ -118,9 +132,17 @@ sports-game --config path/to.yaml <sport>  # use a specific config file
 Sports: `nfl`, `mlb`, `nhl`, `ncaaf`, `ncaamb`, `ncaawb`, `ncaabsb`,
 `ncaamh`, `ncaavbw`, `ncaavbm`.
 
-`--tz` accepts any IANA timezone name; it defaults to your machine's local
-timezone. `--verbose`/`--silent`/`--log-dir` never change the report itself
-(stdout) - only how much diagnostic detail goes to stderr/a log file.
+`--week` and `--range` are mutually exclusive - each is a different way of
+picking which game(s) to show; the default with neither is just the single
+next upcoming game. `--range` accepts a number of days with an optional
+`d` suffix (`1d`, `7d`, `10`, ...), always starting today.
+
+`--tz` accepts any IANA timezone name; it defaults to **UTC**, never your
+machine's own clock - a config file can be copied to a different
+machine/location, so the zone is only ever what you explicitly set (via
+`--tz` or `tz:` in the config), never guessed. `--verbose`/`--silent`/
+`--log-dir` never change the report itself (stdout) - only how much
+diagnostic detail goes to stderr/a log file.
 
 ## Launcher scripts (for friends who don't want to touch Python)
 

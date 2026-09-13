@@ -11,6 +11,14 @@ from ..resolve import Team, resolve
 
 SPORT, LEAGUE = "baseball", "mlb"
 
+# Surfaced by cli.py for out-of-market listeners when a game has an audio
+# entry. All three verified directly (not guessed) before being wired in:
+# the subscription page, and both app-store listings since the audio
+# product is consumed through the MLB App on a phone as much as the web.
+AUDIO_INFO_URL = "https://www.mlb.com/live-stream-games/subscribe/mlb-audio"
+AUDIO_APP_ANDROID_URL = "https://play.google.com/store/apps/details?id=com.bamnetworks.mobile.android.gameday.atbat"
+AUDIO_APP_IOS_URL = "https://apps.apple.com/us/app/mlb/id493619333"
+
 _RAW_TEAMS = [
     ("ARI", "Arizona", "Diamondbacks"), ("ATL", "Atlanta", "Braves"),
     ("BAL", "Baltimore", "Orioles"), ("BOS", "Boston", "Red Sox"),

@@ -8,10 +8,11 @@ sports-game \- show when a followed team plays next, and how to watch or listen
 .RI [ team ]]
 .SH DESCRIPTION
 .B sports-game
-looks up a team's next scheduled game (or a specific week's game) from
-ESPN's public schedule data and prints kickoff time, venue, and how the
-game is broadcast \(em television/streaming and radio, reported
-separately.
+looks up a team's next scheduled game (or a specific numbered week, or
+every game in a rolling day window) from ESPN's public schedule data and
+prints when the data was fetched, kickoff time, venue, and how the game
+is broadcast \(em television/streaming and audio, reported separately,
+plus a direct link to the game's ESPN page.
 .PP
 It covers ten leagues: NFL, MLB, NHL, NCAA football, NCAA men's and
 women's basketball, NCAA baseball, NCAA men's hockey, and NCAA men's and
@@ -83,14 +84,32 @@ exists; if omitted and no default file exists, only explicit
 lookups work \(em there is no follow list to fall back to.
 .TP
 .BI \-\-week " N"
-Show a specific week's game instead of the next upcoming one. Only
-meaningful for \fBnfl\fR and \fBncaaf\fR, which carry week numbers;
-other sports ignore it.
+Show a specific numbered week's game instead of the next upcoming one.
+Only meaningful for \fBnfl\fR and \fBncaaf\fR, which carry week numbers;
+other sports ignore it. Mutually exclusive with
+.BR \-\-range .
+.TP
+.BI \-\-range " Nd"
+Show every game in a rolling window starting today \(em
+.B 1d
+is today only (including games already finished earlier today),
+.B 7d
+is the next 7 days. By calendar date in the display timezone (see
+.BR \-\-tz ).
+Can return more than one game for sports that play daily, e.g. MLB.
+Mutually exclusive with
+.BR \-\-week .
 .TP
 .BI \-\-tz " zone"
 IANA timezone for the printed kickoff time (e.g.
 .IR America/Chicago ).
-Default: this machine's local timezone.
+Default:
+.BR UTC \(em
+never guessed from this machine's own clock, since a config file can be
+copied to a different machine/location. Set this to see local kickoff
+times and to make
+.BR \-\-range 's
+day boundaries match your actual calendar day.
 .TP
 .BI \-\-log\-dir " dir"
 Also write a timestamped diagnostic log file under
@@ -111,12 +130,28 @@ Shortcut for \fB\-\-log\-level DEBUG\fR.
 .BR \-s ", " \-\-silent
 Shortcut for \fB\-\-log\-level ERROR\fR \(em only the report and real
 errors are printed.
+.SH AS-OF TIMESTAMP
+Every run prints an
+.B "As of:"
+line before any game reports, in the display timezone. Schedules are not
+static \(em weather postponements, doubleheaders, and flexed games can
+all change a schedule after this data was fetched \(em so this is what
+tells you how fresh the report is.
 .SH BROADCAST NOTES
 The
 .B TV
 line and
-.B Radio
-line are always printed separately, whatever ESPN reports for the game.
+.B Audio
+line are always printed separately, whatever ESPN reports for the game
+\(em called
+.B Audio ,
+not
+.IR Radio ,
+since most of what is listed here is consumed as internet audio today
+(team apps, TuneIn), not strictly an AM/FM signal. A
+.B "More at:"
+line follows with a direct link to the game's ESPN Gamecast page, when
+ESPN provides one \(em true for every league checked so far.
 Classification differs by league because the underlying broadcast
 systems genuinely differ:
 .TP
@@ -127,14 +162,21 @@ FOX/CBS Sunday-window games cannot be resolved to a specific market by
 this tool \(em that depends on affiliate coverage maps that
 .B sports-game
 has no access to (the sites that publish them block automated
-requests). Check the NFL app's "Local" tab for those.
+requests). The note instead points to a real, verified county/zip-
+searchable coverage map at
+.IR https://thesportsmaps.com/nfl/ ,
+or the NFL app's "Local" tab.
 .TP
 .B MLB
 ESPN reports the actual National/Home/Away split per game, so
 .B sports-game
 prints all of it directly \(em e.g. national streaming on MLB.TV plus
 each team's own regional network. A note about MLB.TV's blackout of
-both teams' home markets is appended when relevant.
+both teams' home markets is appended when relevant. When a game has an
+audio entry, an extra block follows with a link to MLB's own audio-
+streaming subscription and the official MLB App (both the iOS App Store
+and Google Play listings) \(em useful for an out-of-market listener,
+alongside the regional stations already listed for people in-market.
 .TP
 .B NCAA (all six sports) and NHL national games
 A conference or league TV/streaming deal is one single
@@ -163,8 +205,14 @@ Default config file. See
 Look up one team directly:
 .B sports-game nfl bears
 .TP
-A specific week:
+A specific numbered week:
 .B sports-game ncaaf "ohio state" \-\-week 3
+.TP
+Every game today, in a specific timezone:
+.B sports-game mlb cubs \-\-range 1d \-\-tz America/Chicago
+.TP
+Every game in the next 7 days:
+.B sports-game mlb cubs \-\-range 7d \-\-tz America/Chicago
 .TP
 Show every NCAA football team/conference you follow:
 .B sports-game ncaaf

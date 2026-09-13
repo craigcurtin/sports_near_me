@@ -120,21 +120,50 @@ Any future caching (see below) needs a TTL or explicit invalidation, not
 a "resolve once, remember forever" scheme - that's exactly the persisted-
 id failure mode this design avoids today.
 
+## Already built, beyond the original single-game lookup
+
+Worth noting here since they didn't exist in the first version and might
+otherwise look missing to someone skimming this file:
+
+- **`--range Nd`** (`espn.games_within()`) - every game in a rolling
+  window from today, by calendar date in the *display* timezone
+  (never guessed - see the next point). `--week N` still exists
+  separately for a numbered week; the two are mutually exclusive.
+- **UTC-by-default, never-guessed timezone.** `cli._display_tz()`
+  defaults to UTC rather than reading the machine's own clock, because a
+  config file (and the follow list in it) can be copied to a different
+  machine or location - silently trusting `datetime.now().astimezone()`
+  would make the "today"/"this week" boundaries wrong for whoever isn't
+  on the machine that ran the command.
+- **An `As of:` timestamp on every report** - schedules change (weather,
+  doubleheaders, flexed games), so every run states when the data was
+  actually fetched, not just what it fetched.
+- **A direct per-game link** (`Game.link`, from ESPN's own event data) and
+  **real, verified external links where they add something ESPN's API
+  doesn't give directly** - `thesportsmaps.com/nfl` for the NFL regional-
+  window problem, and MLB's own audio subscription + App Store/Google
+  Play listings when a game has an audio entry. Every one of these was
+  fetched and checked before being wired in, not guessed from memory -
+  do the same for any new link: a wrong URL in a tool like this is worse
+  than no link at all.
+
 ## Ideas not built yet
 
 Roughly in order of "someone will probably ask for this next":
 
-- **A "next N games" or full-week view**, not just the single next game -
-  useful for a Sunday NFL slate or a basketball conference's whole
-  schedule for the week.
 - **Push/text/calendar reminders** - an `.ics` export per followed team
   would be the simplest version (no new infra, works with any calendar
   app); a "text me an hour before kickoff" mode would need a scheduler
   and a notification channel, a much bigger addition.
-- **A real local-market answer for NFL FOX/CBS Sunday windows.** The
-  blocker is entirely data access (506sports-style maps block automated
-  requests), not code - if a non-blocked source ever turns up, this is a
+- **A real local-market answer for NFL FOX/CBS Sunday windows**, beyond
+  the current pointer to thesportsmaps.com. Fully solving this
+  programmatically is still blocked by 506sports-style maps refusing
+  automated requests - if a non-blocked source ever turns up, this is a
   contained change to `leagues/nfl.py`'s `broadcast_note()`.
+- **Per-team audio/app links for leagues beyond MLB**, if a similarly
+  reliable single source (not a per-affiliate table) turns up for NFL,
+  NHL, or NCAA - MLB got this because MLB itself brands one official
+  "Audio" product; the other leagues don't obviously have an equivalent.
 - **Cross-process caching for the NCAA team/conference lists**, if
   latency ever matters (following a big conference means one HTTP call
   per member team plus one for the roster itself). Needs a TTL - see

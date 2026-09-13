@@ -30,6 +30,7 @@ LOG_LEVEL_CHOICES = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 # from "user explicitly chose the default."
 DEFAULTS = {
     "week": None,
+    "range": None,
     "tz": None,
     "log_dir": None,
     "log_level": "INFO",
@@ -38,18 +39,44 @@ DEFAULTS = {
 logger = logging.getLogger("sports_near_me")
 
 
+def _parse_day_range(value: str) -> int:
+    """Accepts '7d', '7', 'D7' etc. - just a count of days with an
+    optional 'd' suffix, not a full duration-string parser. Rejects
+    anything under 1 day; there's no such thing as a zero-day window."""
+    text = value.strip().lower().removesuffix("d")
+    try:
+        days = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid --range {value!r} - expected a number of days, e.g. '1d' or '7d'")
+    if days < 1:
+        raise argparse.ArgumentTypeError(f"--range must be at least 1 day, got {value!r}")
+    return days
+
+
 def add_shared_flags(parser: argparse.ArgumentParser) -> None:
     """Flags every invocation shares, whether or not a sport subcommand is
     given - attached to both the top-level parser (for the no-subcommand
     "everything I follow" mode) and every per-sport subparser."""
     parser.add_argument("--config", default=None,
                          help=f"Path to a YAML config file. Default: {DEFAULT_CONFIG_PATH} if it exists.")
-    parser.add_argument("--week", type=int, default=None,
-                         help="Show a specific week's game instead of the next upcoming one "
-                              "(football only - other sports ignore this).")
+    # Mutually exclusive: each is a different way of picking WHICH game(s)
+    # to show, so combining them is ambiguous about intent - same
+    # reasoning as the log-level group below. Default (none given): just
+    # the single next upcoming game.
+    which_game = parser.add_mutually_exclusive_group()
+    which_game.add_argument("--week", type=int, default=None,
+                             help="Show a specific numbered week's game instead of the next "
+                                  "upcoming one (football only - other sports ignore this).")
+    which_game.add_argument("--range", type=_parse_day_range, default=None, metavar="Nd",
+                             help="Show every game in a rolling window starting today, e.g. "
+                                  "'1d' (today only, including games already finished earlier "
+                                  "today) or '7d' (this week). By calendar date in the display "
+                                  "timezone (see --tz). Can be more than one game for sports "
+                                  "that play daily, e.g. MLB.")
     parser.add_argument("--tz", default=None,
                          help="IANA timezone for kickoff time (e.g. 'America/New_York'). "
-                              "Default: this machine's local timezone.")
+                              "Default: UTC - never guessed from this machine's own clock, "
+                              "since a config file can be copied to a different machine/location.")
     parser.add_argument("--log-dir", default=None,
                          help="Directory to write a timestamped diagnostic log file to. "
                               "Default: none (stderr only).")

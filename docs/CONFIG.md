@@ -16,7 +16,7 @@ existing is not — most people won't have created it yet.
 
 | Key | Meaning |
 |---|---|
-| `tz` | IANA timezone string (e.g. `America/New_York`) used for every printed kickoff time. Overridden by `--tz`. Default: the machine's local timezone. |
+| `tz` | IANA timezone string (e.g. `America/New_York`) used for every printed kickoff time. Overridden by `--tz`. Default: **UTC** - never guessed from the machine's own clock, since this file can be copied to a different machine/location. Set this to see local kickoff times. |
 | `log_level` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. Default: `INFO`. |
 | `log_dir` | Directory to also write a timestamped diagnostic log file to. Default: none (stderr only). |
 

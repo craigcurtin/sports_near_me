@@ -25,7 +25,7 @@ writing the fix (see the project's session history, not repeated here):
 import json
 import urllib.request
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 SCHEDULE_URL = "https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams/{team_id}/schedule"
@@ -53,6 +53,7 @@ class Game:
     venue_name: str
     venue_city: str
     venue_state: str
+    link: Optional[str] = None
     broadcasts: list = field(default_factory=list)
     completed: bool = False
 
@@ -130,6 +131,13 @@ def fetch_schedule(sport: str, league: str, team_id: str) -> list:
             for b in competition.get("broadcasts", [])
         ]
 
+        link = None
+        for entry in event.get("links", []):
+            rel = entry.get("rel", [])
+            if "summary" in rel and "desktop" in rel:
+                link = entry.get("href")
+                break
+
         games.append(Game(
             event_id=event["id"],
             name=event["name"],
@@ -144,6 +152,7 @@ def fetch_schedule(sport: str, league: str, team_id: str) -> list:
             venue_name=venue.get("fullName", ""),
             venue_city=address.get("city", ""),
             venue_state=address.get("state", ""),
+            link=link,
             broadcasts=broadcasts,
             completed=competition.get("status", {}).get("type", {}).get("completed", False),
         ))
@@ -161,15 +170,41 @@ def game_for_week(games: list, week: int) -> Optional[Game]:
     return matches[0] if matches else None
 
 
+def games_within(games: list, days: int, tz, now: Optional[datetime] = None) -> list:
+    """Every game from today through (days - 1) days from now - days=1 is
+    "today only," days=7 is "this week" - by calendar date IN THE GIVEN
+    DISPLAY TIMEZONE. "Today" is a calendar concept, so this has to use
+    whatever timezone the report is being shown in (which defaults to UTC,
+    per the "never guess the viewer's timezone" rule in cli.py - pass an
+    explicit tz here for a real local-calendar window). Includes games
+    already finished earlier today, not just upcoming ones - this is
+    "what's on this window," not "what's next.\""""
+    now = now or datetime.now(timezone.utc)
+    start = now.astimezone(tz).date()
+    end = start + timedelta(days=days - 1)
+    return sorted(
+        (g for g in games if start <= g.kickoff_utc.astimezone(tz).date() <= end),
+        key=lambda g: g.kickoff_utc,
+    )
+
+
 _MARKET_LABELS = {"National": "National", "Home": "Home", "Away": "Away"}
 
 
-def radio_note(game: Game) -> str:
-    """Generic across every league - radio doesn't have NFL's regional-map
-    ambiguity problem, it's just "this station carries it," so one shared
-    formatter (grouped the same National/Home/Away way MLB's TV data is)
-    covers every sport rather than needing a per-league implementation."""
-    radios = [b for b in game.broadcasts if b.medium == "Radio"]
-    if not radios:
-        return "No radio broadcast listed."
-    return " | ".join(f"{_MARKET_LABELS.get(b.market_type, b.market_type)}: {b.network}" for b in radios)
+def audio_note(game: Game) -> str:
+    """Generic across every league. Called "Audio" rather than "Radio" -
+    ESPN's own medium type here is literally "Radio," but what it actually
+    lists is mostly consumed as internet audio today (team flagship
+    stations simulcast on their own apps/TuneIn as often as a physical
+    AM/FM dial), so "Radio" undersells it. Audio doesn't have NFL's
+    regional-map ambiguity problem - it's just "this station/stream
+    carries it" - so one shared formatter (grouped the same National/
+    Home/Away way MLB's TV data is) covers every sport rather than needing
+    a per-league implementation. Home/Away entries are a specific
+    market's real regional broadcast (useful if you're in that market);
+    a National entry is the one a remote/out-of-market listener actually
+    wants - both are worth keeping, not just the national one."""
+    audio = [b for b in game.broadcasts if b.medium == "Radio"]
+    if not audio:
+        return "No audio broadcast listed."
+    return " | ".join(f"{_MARKET_LABELS.get(b.market_type, b.market_type)}: {b.network}" for b in audio)

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
-from sports_near_me.espn import Broadcast, Game, _has_upcoming_event, game_for_week, next_game, radio_note
+from sports_near_me.espn import Broadcast, Game, _has_upcoming_event, audio_note, game_for_week, games_within, next_game
 
 
 def _raw_event(iso_date, completed=False):
@@ -63,9 +64,9 @@ def test_is_home_matches_numeric_id_or_abbreviation():
     assert g.opponent_name_for("WSH") == "Chicago Cubs"
 
 
-def test_radio_note_none_listed():
+def test_audio_note_none_listed():
     g = _game("1", 1, "2026-09-13T17:00:00", broadcasts=[Broadcast("FOX", "TV", "National")])
-    assert radio_note(g) == "No radio broadcast listed."
+    assert audio_note(g) == "No audio broadcast listed."
 
 
 def test_has_upcoming_event_true_for_future_uncompleted_game():
@@ -91,11 +92,56 @@ def test_has_upcoming_event_false_for_empty():
     assert _has_upcoming_event({}) is False
 
 
-def test_radio_note_lists_entries():
+def test_audio_note_lists_entries():
     g = _game("1", 1, "2026-09-13T17:00:00", broadcasts=[
         Broadcast("WGN Radio", "Radio", "Home"),
         Broadcast("ESPN Radio", "Radio", "National"),
     ])
-    note = radio_note(g)
+    note = audio_note(g)
     assert "WGN Radio" in note
     assert "ESPN Radio" in note
+
+
+def test_games_within_one_day_is_today_only():
+    now = datetime(2026, 9, 13, 15, 0, tzinfo=timezone.utc)
+    games = [
+        _game("1", None, "2026-09-12T23:00:00"),  # yesterday
+        _game("2", None, "2026-09-13T02:00:00"),  # earlier today - included even though past
+        _game("3", None, "2026-09-13T23:00:00"),  # later today
+        _game("4", None, "2026-09-14T02:00:00"),  # tomorrow
+    ]
+    result = games_within(games, days=1, tz=timezone.utc, now=now)
+    assert [g.event_id for g in result] == ["2", "3"]
+
+
+def test_games_within_seven_days_is_this_week():
+    now = datetime(2026, 9, 13, 15, 0, tzinfo=timezone.utc)
+    games = [
+        _game("1", None, "2026-09-12T23:00:00"),  # yesterday - excluded
+        _game("2", None, "2026-09-13T02:00:00"),  # today
+        _game("3", None, "2026-09-19T23:00:00"),  # day 7 (today + 6) - included
+        _game("4", None, "2026-09-20T02:00:00"),  # day 8 - excluded
+    ]
+    result = games_within(games, days=7, tz=timezone.utc, now=now)
+    assert [g.event_id for g in result] == ["2", "3"]
+
+
+def test_games_within_respects_display_timezone():
+    # 2026-09-13T02:00 UTC is still 2026-09-12 evening in US/Eastern -
+    # "today" has to be computed in the DISPLAY timezone, not UTC, or a
+    # late-UTC/early-local game gets attributed to the wrong calendar day.
+    now = datetime(2026, 9, 13, 4, 0, tzinfo=timezone.utc)  # midnight Eastern
+    games = [_game("1", None, "2026-09-13T02:00:00")]  # 10pm Eastern on the 12th
+    eastern = ZoneInfo("America/New_York")
+    assert games_within(games, days=1, tz=eastern, now=now) == []
+    assert games_within(games, days=1, tz=timezone.utc, now=now) != []
+
+
+def test_games_within_sorted_by_kickoff():
+    now = datetime(2026, 9, 13, 0, 0, tzinfo=timezone.utc)
+    games = [
+        _game("later", None, "2026-09-14T20:00:00"),
+        _game("earlier", None, "2026-09-13T10:00:00"),
+    ]
+    result = games_within(games, days=3, tz=timezone.utc, now=now)
+    assert [g.event_id for g in result] == ["earlier", "later"]

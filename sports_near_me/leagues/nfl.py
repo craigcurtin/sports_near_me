@@ -8,6 +8,15 @@ from ..resolve import Team, resolve
 
 SPORT, LEAGUE = "football", "nfl"
 
+# Surfaced by cli.py for out-of-market listeners when a game has an audio
+# entry. Westwood One is the NFL's own official national radio/audio
+# partner (confirmed via Cumulus Media's own announcement) and streams
+# every game through its own site/app, not just over the air - all three
+# links verified real before being wired in, same as MLB's.
+AUDIO_INFO_URL = "https://westwoodonesports.com"
+AUDIO_APP_ANDROID_URL = "https://play.google.com/store/apps/details?id=com.westwoodone.sports"
+AUDIO_APP_IOS_URL = "https://apps.apple.com/us/app/westwood-one-sports/id6743144592"
+
 # (abbreviation, location, nickname) - matches ESPN's own /teams list.
 _RAW_TEAMS = [
     ("ARI", "Arizona", "Cardinals"), ("ATL", "Atlanta", "Falcons"),
@@ -74,7 +83,7 @@ def broadcast_note(game) -> str:
     if key in NATIONAL_NETWORKS:
         return f"{network} - national broadcast, every market gets this one."
     if key in REGIONAL_NETWORKS:
-        return (f"{network} - regional Sunday window. Whether it reaches you depends on your "
-                f"local affiliate's assignment, which this tool can't check. Look up the NFL "
-                f"app's Local tab, or your team's game-day coverage-map post, closer to kickoff.")
+        return (f"{network} - regional Sunday window. This tool can't tell whether it reaches "
+                f"you, but https://thesportsmaps.com/nfl/ has a real, current county/zip-level "
+                f"coverage map (verified working, updated weekly) - or check the NFL app's Local tab.")
     return f"{network} - unrecognized network, can't classify national vs. regional."

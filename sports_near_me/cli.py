@@ -1,10 +1,10 @@
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from .cli_common import add_shared_flags, configure_logging, logger, resolve_settings
-from .espn import fetch_schedule, game_for_week, next_game, radio_note
+from .espn import audio_note, fetch_schedule, game_for_week, games_within, next_game
 from .leagues import LEAGUES
 
 
@@ -47,23 +47,18 @@ def _followed_teams_for(sport: str, follow_cfg: dict) -> list:
     return list(teams_by_id.values())
 
 
-def _print_game(league, team, settings) -> None:
-    try:
-        games = fetch_schedule(league.SPORT, league.LEAGUE, team.id)
-    except Exception:
-        logger.exception(f"Failed to fetch schedule for {team.display_name}")
-        print(f"error: couldn't fetch {team.display_name}'s schedule.", file=sys.stderr)
-        return
-    logger.info(f"Fetched {len(games)} game(s) for {team.display_name}")
+def _display_tz(settings):
+    # Never guess the viewer's timezone from the machine's own clock - a
+    # config file gets copied between machines/locations. Without an
+    # explicit --tz or config tz, fall back to UTC: neutral, never wrong,
+    # and always clearly labeled (see %Z in _format_game) rather than
+    # silently assuming this machine's system timezone is where the
+    # viewer is.
+    return ZoneInfo(settings["tz"]) if settings["tz"] else timezone.utc
 
-    game = game_for_week(games, settings["week"]) if settings["week"] is not None else next_game(games)
-    if game is None:
-        scope = f"week {settings['week']}" if settings["week"] is not None else "upcoming game"
-        print(f"{team.display_name}: no {scope} found.")
-        return
 
-    local_tz = ZoneInfo(settings["tz"]) if settings["tz"] else datetime.now().astimezone().tzinfo
-    local_kickoff = game.kickoff_utc.astimezone(local_tz)
+def _format_game(league, team, game, display_tz) -> None:
+    local_kickoff = game.kickoff_utc.astimezone(display_tz)
     opponent = game.opponent_name_for(team.id)
     vs_or_at = "vs." if game.is_home_for(team.id) else "at"
     week_label = f"Week {game.week}" if game.week else "Game"
@@ -72,7 +67,57 @@ def _print_game(league, team, settings) -> None:
     print(f"Kickoff: {local_kickoff.strftime('%A, %B %d, %Y  %I:%M %p %Z')}")
     print(f"Venue:   {game.venue_name} ({game.venue_city}, {game.venue_state})")
     print(f"TV:      {league.broadcast_note(game)}")
-    print(f"Radio:   {radio_note(game)}")
+
+    audio = audio_note(game)
+    print(f"Audio:   {audio}")
+    # A league can optionally point to its own national audio-streaming
+    # product (e.g. MLB Audio) - worth surfacing only when this game
+    # actually has an audio entry AND you're not necessarily in either
+    # team's home/away market, where the listed regional stations already
+    # cover you. See leagues/mlb.py's AUDIO_INFO_URL.
+    audio_link = getattr(league, "AUDIO_INFO_URL", None)
+    if audio_link and "No audio broadcast listed" not in audio:
+        print(f"         Out-of-market listeners: {audio_link}")
+        android = getattr(league, "AUDIO_APP_ANDROID_URL", None)
+        ios = getattr(league, "AUDIO_APP_IOS_URL", None)
+        if android:
+            print(f"         Android app: {android}")
+        if ios:
+            print(f"         iOS app:     {ios}")
+
+    if game.link:
+        print(f"More at: {game.link}")
+
+
+def _print_team(league, team, settings) -> None:
+    try:
+        games = fetch_schedule(league.SPORT, league.LEAGUE, team.id)
+    except Exception:
+        logger.exception(f"Failed to fetch schedule for {team.display_name}")
+        print(f"error: couldn't fetch {team.display_name}'s schedule.", file=sys.stderr)
+        return
+    logger.info(f"Fetched {len(games)} game(s) for {team.display_name}")
+
+    display_tz = _display_tz(settings)
+
+    if settings["week"] is not None:
+        selected = [g for g in [game_for_week(games, settings["week"])] if g]
+        scope = f"week {settings['week']}"
+    elif settings["range"] is not None:
+        selected = games_within(games, settings["range"], display_tz)
+        scope = f"the next {settings['range']} day(s)"
+    else:
+        selected = [g for g in [next_game(games)] if g]
+        scope = "an upcoming game"
+
+    if not selected:
+        print(f"{team.display_name}: no game found for {scope}.")
+        return
+
+    for i, game in enumerate(selected):
+        if len(selected) > 1 and i > 0:
+            print()
+        _format_game(league, team, game, display_tz)
 
 
 def run(argv=None) -> int:
@@ -126,13 +171,23 @@ def run(argv=None) -> int:
     if not jobs:
         return 1
 
+    # Schedules aren't static - weather, doubleheaders, and other
+    # rescheduling can add/move/cancel a game after this report is
+    # generated. Printing when the data was actually fetched (not when
+    # someone happens to be reading it later) is what makes that
+    # staleness visible instead of silent.
+    display_tz = _display_tz(settings)
+    fetched_at = datetime.now(timezone.utc).astimezone(display_tz)
+    print(f"As of: {fetched_at.strftime('%A, %B %d, %Y  %I:%M %p %Z')} - schedules can change after this.")
+    print()
+
     show_headers = len(jobs) > 1
     for i, (sport, team) in enumerate(jobs):
         if show_headers:
             if i > 0:
                 print()
             print(f"=== {sport.upper()}: {team.display_name} ===")
-        _print_game(LEAGUES[sport], team, settings)
+        _print_team(LEAGUES[sport], team, settings)
 
     return 0
 
