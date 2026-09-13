@@ -275,33 +275,88 @@ is needed at all.
 ## Usage
 
 ```bash
-sports-game <sport> <team>
-sports-game <sport> <team>,<team>          # several teams, one run - no config file needed
-sports-game <sport> <team> --week 5        # a numbered week - football only
-sports-game <sport> <team> --range 1d      # every game today (incl. already finished)
-sports-game <sport> <team> --range 7d      # every game in the next 7 days
-sports-game <sport> <team> --tz America/Chicago
-sports-game <sport> <team> --verbose       # DEBUG-level diagnostics on stderr
-sports-game <sport> <team> --silent        # only the report and real errors
-sports-game <sport> <team> --log-dir ~/logs
-sports-game --config path/to.yaml <sport>  # use a specific config file
+sports-game <sport> <team> [options]
 ```
 
-Sports: `nfl`, `mlb`, `nhl`, `ncaaf`, `ncaamb`, `ncaawb`, `ncaabsb`,
-`ncaamh`, `ncaavbw`, `ncaavbm`.
+**Sport** is required whenever you're looking up a specific team:
+`nfl`, `mlb`, `nhl`, `ncaaf`, `ncaamb`, `ncaawb`, `ncaabsb`, `ncaamh`,
+`ncaavbw`, `ncaavbm`.
 
-`--week` and `--range` are mutually exclusive - each is a different way of
-picking which game(s) to show; the default with neither is just the single
-next upcoming game. `--range` accepts a number of days with an optional
-`d` suffix (`1d`, `7d`, `10`, ...), always starting today.
+**Team is optional, and can be more than one team.** Leave it off
+entirely to use your config's follow list for that sport (see above).
+Give it one team for a single lookup, or several at once - separated by
+commas, spaces, or both - to check them all in one run without touching
+your config file:
 
-`--tz` accepts any IANA timezone name; it defaults to **this machine's
-local timezone** - most people run this from wherever they actually are,
-and the zone actually used is always shown (e.g. "EDT"), never hidden.
-Set `--tz` (or `tz:` in the config) if you want a specific zone regardless
-of what machine runs the command. `--verbose`/`--silent`/
-`--log-dir` never change the report itself (stdout) - only how much
-diagnostic detail goes to stderr/a log file.
+```bash
+sports-game nfl bears                 # one team
+sports-game nfl bears,packers         # two teams, comma-separated
+sports-game nfl "bears, packers"      # same thing, space after the comma - quoting never required either way
+sports-game nfl bears packers         # same thing again, no comma at all
+```
+
+### Options
+
+Every option below can follow the team (or stand alone, for the
+no-arguments "show everything I follow" mode):
+
+| Option | What it does |
+|---|---|
+| `--week N` | Show a specific numbered week's game instead of the next upcoming one. Only `nfl` and `ncaaf` games carry a real week number - other sports report "no game found for week N" rather than showing anything, since there's no week number to match. |
+| `--range Nd` | Show every game in a rolling window starting today - `--range 1d` is today only (including games already finished earlier today), `--range 7d` is the next 7 days. Mutually exclusive with `--week`. |
+| `--tz ZONE` | Timezone for the printed kickoff time, e.g. `--tz America/Chicago`. Defaults to **this machine's own local timezone** - the zone actually used is always shown (e.g. "EDT"), never hidden. Set this if you want a specific zone regardless of what machine runs the command. |
+| `--config PATH` | Use a specific config file instead of the default `~/.sports_near_me.yaml`. |
+| `--verbose` | Show DEBUG-level diagnostics on stderr - what got fetched, from where. Never changes the report itself. |
+| `--silent` | Only print the report and real errors - suppress the normal progress diagnostics. |
+| `--log-dir DIR` | Also write a timestamped diagnostic log file into `DIR`, in addition to stderr. |
+
+`--week` and `--range` are mutually exclusive - each is a different way
+of picking which game(s) to show; the default with neither is just the
+single next upcoming game. `--verbose`, `--silent`, and `--log-dir` never
+touch the report itself (stdout) - only how much diagnostic detail goes
+to stderr/a log file.
+
+### Common usage patterns
+
+**Several teams, one run** (no config file needed - see above for the
+comma/space rules):
+
+```bash
+sports-game ncaaf tennessee,wisconsin --week 3     # both teams' week 3 games
+sports-game nfl bears,packers --range 1d --tz America/Chicago   # both teams' games today, if any
+```
+
+**A whole conference, or several** - this one's config-only, not a CLI
+argument (`sports-game ncaaf SEC` looks for a team literally named
+"SEC" and fails - conferences only resolve through `follow.<sport>.conferences`
+in your config file, alongside or instead of specific `teams:`):
+
+```yaml
+follow:
+  ncaaf:
+    teams: [Notre Dame]              # independent - not in any conference
+    conferences: [SEC, Big Ten]      # every team in BOTH conferences, deduplicated
+```
+
+```bash
+sports-game ncaaf   # shows Notre Dame + every SEC team + every Big Ten team
+```
+
+**Dates and ranges** - "what's on today" and "what's this week" are
+`--range`, not `--week` (that's for a numbered football week specifically):
+
+```bash
+sports-game nfl bears,packers --range 1d --tz America/Chicago   # today only, for both teams
+sports-game mlb cubs --range 7d --tz America/Chicago            # every Cubs game in the next 7 days
+sports-game --range 3d                                          # your whole follow list, next 3 days
+```
+
+**A different config file** than the default `~/.sports_near_me.yaml` -
+useful for testing changes, or keeping more than one follow list:
+
+```bash
+sports-game --config path/to.yaml ncaaf    # that file's ncaaf follow list
+```
 
 ## Launcher scripts (for friends who don't want to touch Python)
 

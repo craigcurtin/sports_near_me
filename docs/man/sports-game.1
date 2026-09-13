@@ -99,8 +99,9 @@ lookups work \(em there is no follow list to fall back to.
 .TP
 .BI \-\-week " N"
 Show a specific numbered week's game instead of the next upcoming one.
-Only meaningful for \fBnfl\fR and \fBncaaf\fR, which carry week numbers;
-other sports ignore it. Mutually exclusive with
+Only \fBnfl\fR and \fBncaaf\fR games carry a real week number \(em other
+sports report "no game found for week N" rather than showing anything,
+since there is no week number to match. Mutually exclusive with
 .BR \-\-range .
 .TP
 .BI \-\-range " Nd"
