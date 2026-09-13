@@ -94,6 +94,8 @@ REGIONAL_NETWORKS = {"FOX", "CBS"}
 KNOWN_AUDIO = {
     "CHI": ("WBBM Newsradio 780 AM / 105.9 FM",
             "https://www.chicagobears.com/audio/listen-live-on-wbbm-newsradio-780-105-9-fm"),
+    "GB": ("95.7 BIG FM (WRIT), Packers Radio Network",
+           "https://www.packers.com/video/radio-network"),
 }
 
 

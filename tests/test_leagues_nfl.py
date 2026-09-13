@@ -52,5 +52,11 @@ def test_known_audio_verified_team():
     assert url.startswith("https://")
 
 
+def test_known_audio_second_verified_team():
+    station, url = nfl.known_audio("GB")
+    assert "WRIT" in station
+    assert url.startswith("https://")
+
+
 def test_known_audio_unverified_team_returns_none():
     assert nfl.known_audio("SF") is None
