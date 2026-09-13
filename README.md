@@ -96,7 +96,7 @@ conference members.
   in each `leagues/*.py` module) fills the gap for the teams checked so
   far:
 
-  | League | Team | Flagship |
+  | Sport | Team | Flagship |
   |---|---|---|
   | NFL | Bears | WBBM Newsradio 780 AM / 105.9 FM |
   | NFL | Packers | 95.7 BIG FM (WRIT), Packers Radio Network |
@@ -107,8 +107,14 @@ conference members.
   | MLB | White Sox | ESPN 1000 AM / 100.3 FM (WMVP) |
   | NHL | Blackhawks | WGN Radio 720 AM |
   | NCAA football | Tennessee | Vol Network |
-  | NCAA football, men's/women's basketball, hockey, women's volleyball | Wisconsin | Wisconsin Badgers Sports Network |
-  | NCAA men's/women's basketball, baseball | Tennessee | Vol Network |
+  | NCAA football | Wisconsin | Wisconsin Badgers Sports Network |
+  | NCAA men's basketball | Tennessee | Vol Network |
+  | NCAA men's basketball | Wisconsin | Wisconsin Badgers Sports Network |
+  | NCAA women's basketball | Tennessee | Vol Network |
+  | NCAA women's basketball | Wisconsin | Wisconsin Badgers Sports Network |
+  | NCAA baseball | Tennessee | Vol Network |
+  | NCAA men's hockey | Wisconsin | Wisconsin Badgers Sports Network |
+  | NCAA women's volleyball | Wisconsin | Wisconsin Badgers Sports Network |
 
   This is deliberately partial, not a guess at every team in every
   league - broadcast rights are real contracts that get renegotiated
