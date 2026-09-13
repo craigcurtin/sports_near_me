@@ -63,15 +63,34 @@ rather than a guess.
 
 ## Follow a list, not just one team
 
-Set up `~/.sports_near_me.yaml` (copy [`config.example.yaml`](config.example.yaml))
-with the teams and conferences you actually follow:
+This is the part you'll actually want to set up once and reuse - **copy
+the example config, then edit it to list *your* teams**, not the ones in
+the example:
+
+**1. Copy the example file to `~/.sports_near_me.yaml`:**
+
+```bash
+cp config.example.yaml ~/.sports_near_me.yaml      # macOS / Linux
+```
+```cmd
+copy config.example.yaml %USERPROFILE%\.sports_near_me.yaml    :: Windows cmd.exe
+```
+```powershell
+Copy-Item config.example.yaml ~\.sports_near_me.yaml    # PowerShell
+```
+
+**2. Open `~/.sports_near_me.yaml` in any text editor** (Notepad, TextEdit,
+VS Code, whatever you've got) **and replace the example teams with your
+own.** The example ships with Bears, Packers, Cubs, Notre Dame, and
+Wisconsin - those are just placeholders to show the format; swap them
+for whoever you actually follow:
 
 ```yaml
 follow:
   nfl:
-    teams: [Bears, Packers]
+    teams: [Bears, Packers]          # <- replace with your NFL team(s)
   mlb:
-    teams: [Cubs]
+    teams: [Cubs]                    # <- replace with your MLB team(s)
   ncaaf:
     teams: [Notre Dame]        # independent - not in any conference
     conferences: [SEC, Big Ten]   # Big Ten already includes Wisconsin
@@ -81,10 +100,22 @@ follow:
     teams: [Wisconsin]
 ```
 
-See [`config.example.yaml`](config.example.yaml) for the full example,
-including women's volleyball and men's basketball too.
+Team names go in the same loose format `sports-game` accepts on the
+command line - a nickname, city, or full name all work, so you don't
+need to know any official spelling. Use a whole conference
+(`conferences: [SEC]`) instead of listing every school if you just want
+"everything in this conference," or list specific teams, or both.
 
-Then:
+**3. Save the file** (as plain text, not `.txt` - if Notepad tries to add
+a `.txt` extension, save it as "All Files" and type the name exactly as
+`.sports_near_me.yaml`). See [`config.example.yaml`](config.example.yaml)
+for the full example, including women's volleyball and men's basketball
+too.
+
+**4. Run `sports-game` with no arguments** and confirm it shows your teams,
+not the example ones - that's how you know the edit worked.
+
+Then, day to day:
 
 ```bash
 sports-game                   # every team/conference above, one game each
