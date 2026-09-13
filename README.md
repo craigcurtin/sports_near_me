@@ -166,6 +166,7 @@ conference members.
   | NFL | Lions | 97.1 The Ticket (WXYT), Lions Radio Network |
   | MLB | Cubs | WSCR 670 The Score |
   | MLB | White Sox | ESPN 1000 AM / 100.3 FM (WMVP) |
+  | MLB | Brewers | WTMJ 620 AM / 103.3 FM |
   | NHL | Blackhawks | WGN Radio 720 AM |
   | NCAA football | Tennessee | Vol Network |
   | NCAA football | Wisconsin | Wisconsin Badgers Sports Network |

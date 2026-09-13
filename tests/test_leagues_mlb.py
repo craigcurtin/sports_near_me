@@ -1,3 +1,5 @@
+import pytest
+
 from sports_near_me.espn import Broadcast, Game
 from sports_near_me.leagues import mlb
 
@@ -43,15 +45,14 @@ def test_broadcast_note_no_tv_or_streaming():
     assert "not yet announced" in mlb.broadcast_note(game).lower()
 
 
-def test_known_audio_verified_team():
-    station, url = mlb.known_audio("CHC")
-    assert "670 The Score" in station
-    assert url.startswith("https://")
-
-
-def test_known_audio_second_verified_team():
-    station, url = mlb.known_audio("CWS")
-    assert "ESPN 1000" in station
+@pytest.mark.parametrize("abbr,expect_in_station", [
+    ("CHC", "670 The Score"),
+    ("CWS", "ESPN 1000"),
+    ("MIL", "WTMJ"),
+])
+def test_known_audio_verified_teams(abbr, expect_in_station):
+    station, url = mlb.known_audio(abbr)
+    assert expect_in_station in station
     assert url.startswith("https://")
 
 

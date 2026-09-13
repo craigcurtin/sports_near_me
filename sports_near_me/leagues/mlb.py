@@ -69,6 +69,7 @@ _MARKET_LABELS = {"National": "National", "Home": "Home broadcast", "Away": "Awa
 KNOWN_AUDIO = {
     "CHC": ("WSCR 670 The Score", "https://www.audacy.com/670thescore"),
     "CWS": ("ESPN 1000 AM / 100.3 FM (WMVP)", "https://tunein.com/radio/ESPN-Chicago-1000-s21297/"),
+    "MIL": ("WTMJ 620 AM / 103.3 FM", "https://www.audacy.com/620wtmj/listen"),
 }
 
 
