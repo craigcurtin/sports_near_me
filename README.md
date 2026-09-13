@@ -27,8 +27,8 @@ basketball, NCAA baseball, NCAA men's hockey, NCAA men's/women's volleyball.**
 ```bash
 sports-game nfl bears
 sports-game mlb "kansas city royals"
-sports-game ncaaf "ohio state"
-sports-game ncaawb duke
+sports-game ncaaf tennessee
+sports-game ncaawb wisconsin
 sports-game ncaamh wisconsin
 ```
 
@@ -63,9 +63,9 @@ including women's volleyball and men's basketball too.
 Then:
 
 ```bash
-sports-game                 # every team/conference above, one game each
-sports-game ncaaf           # just the NCAA football list
-sports-game ncaaf "auburn"  # one specific team, ignoring the follow list
+sports-game                   # every team/conference above, one game each
+sports-game ncaaf             # just the NCAA football list
+sports-game ncaaf wisconsin   # one specific team, ignoring the follow list
 ```
 
 Following a conference follows each member team's **entire** schedule -

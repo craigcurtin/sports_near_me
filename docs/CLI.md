@@ -133,7 +133,7 @@ line there means "check your team's local RSN or streaming app," not
 
 ```bash
 sports-game nfl bears                                 # one team, directly
-sports-game ncaaf "ohio state" --week 3               # a specific numbered week
+sports-game ncaaf tennessee --week 3                  # a specific numbered week
 sports-game mlb cubs --range 1d --tz America/Chicago  # every Cubs game today
 sports-game mlb cubs --range 7d --tz America/Chicago  # every Cubs game this week
 sports-game ncaaf                                     # everything you follow in NCAA football
