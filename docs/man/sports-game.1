@@ -104,12 +104,14 @@ Mutually exclusive with
 IANA timezone for the printed kickoff time (e.g.
 .IR America/Chicago ).
 Default:
-.BR UTC \(em
-never guessed from this machine's own clock, since a config file can be
-copied to a different machine/location. Set this to see local kickoff
-times and to make
+.B "this machine's local timezone"
+\(em the zone actually used is always shown (e.g.
+.IR EDT ),
+never hidden. Set this if you want a specific zone regardless of what
+machine runs the command \(em useful if a config file gets shared and run
+somewhere else, or to make
 .BR \-\-range 's
-day boundaries match your actual calendar day.
+day boundaries match a different calendar day.
 .TP
 .BI \-\-log\-dir " dir"
 Also write a timestamped diagnostic log file under

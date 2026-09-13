@@ -75,8 +75,9 @@ def add_shared_flags(parser: argparse.ArgumentParser) -> None:
                                   "that play daily, e.g. MLB.")
     parser.add_argument("--tz", default=None,
                          help="IANA timezone for kickoff time (e.g. 'America/New_York'). "
-                              "Default: UTC - never guessed from this machine's own clock, "
-                              "since a config file can be copied to a different machine/location.")
+                              "Default: this machine's local timezone - the zone actually used "
+                              "is always shown (e.g. 'EDT'), so set this explicitly if you want "
+                              "a specific zone regardless of what machine runs the command.")
     parser.add_argument("--log-dir", default=None,
                          help="Directory to write a timestamped diagnostic log file to. "
                               "Default: none (stderr only).")

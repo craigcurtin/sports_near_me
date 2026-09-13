@@ -137,10 +137,11 @@ picking which game(s) to show; the default with neither is just the single
 next upcoming game. `--range` accepts a number of days with an optional
 `d` suffix (`1d`, `7d`, `10`, ...), always starting today.
 
-`--tz` accepts any IANA timezone name; it defaults to **UTC**, never your
-machine's own clock - a config file can be copied to a different
-machine/location, so the zone is only ever what you explicitly set (via
-`--tz` or `tz:` in the config), never guessed. `--verbose`/`--silent`/
+`--tz` accepts any IANA timezone name; it defaults to **this machine's
+local timezone** - most people run this from wherever they actually are,
+and the zone actually used is always shown (e.g. "EDT"), never hidden.
+Set `--tz` (or `tz:` in the config) if you want a specific zone regardless
+of what machine runs the command. `--verbose`/`--silent`/
 `--log-dir` never change the report itself (stdout) - only how much
 diagnostic detail goes to stderr/a log file.
 

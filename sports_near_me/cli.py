@@ -48,13 +48,14 @@ def _followed_teams_for(sport: str, follow_cfg: dict) -> list:
 
 
 def _display_tz(settings):
-    # Never guess the viewer's timezone from the machine's own clock - a
-    # config file gets copied between machines/locations. Without an
-    # explicit --tz or config tz, fall back to UTC: neutral, never wrong,
-    # and always clearly labeled (see %Z in _format_game) rather than
-    # silently assuming this machine's system timezone is where the
-    # viewer is.
-    return ZoneInfo(settings["tz"]) if settings["tz"] else timezone.utc
+    # Default to this machine's own local timezone - most people run this
+    # from wherever they actually are, and forcing everyone to convert
+    # from UTC by hand is worse than the rare case where the machine's
+    # clock isn't where the viewer is (that's what --tz/config tz are
+    # for). The one thing that's never optional is showing WHICH zone was
+    # used - see %Z in _format_game - so nothing here is hidden, even
+    # though it's not always explicit.
+    return ZoneInfo(settings["tz"]) if settings["tz"] else datetime.now().astimezone().tzinfo
 
 
 def _format_game(league, team, game, display_tz) -> None:

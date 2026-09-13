@@ -126,15 +126,20 @@ Worth noting here since they didn't exist in the first version and might
 otherwise look missing to someone skimming this file:
 
 - **`--range Nd`** (`espn.games_within()`) - every game in a rolling
-  window from today, by calendar date in the *display* timezone
-  (never guessed - see the next point). `--week N` still exists
+  window from today, by calendar date in the *display* timezone (see the
+  next point for what that defaults to). `--week N` still exists
   separately for a numbered week; the two are mutually exclusive.
-- **UTC-by-default, never-guessed timezone.** `cli._display_tz()`
-  defaults to UTC rather than reading the machine's own clock, because a
-  config file (and the follow list in it) can be copied to a different
-  machine or location - silently trusting `datetime.now().astimezone()`
-  would make the "today"/"this week" boundaries wrong for whoever isn't
-  on the machine that ran the command.
+- **Local-by-default, never-HIDDEN timezone.** `cli._display_tz()`
+  defaults to this machine's own local timezone - the first version of
+  this defaulted to UTC instead, reasoning that a config file (and its
+  follow list) can travel to a different machine/location, so guessing
+  local time could be wrong. That traded a real problem (most people
+  don't want to hand-convert UTC to local time) for a rare one (the
+  machine's clock isn't where the viewer is) - reverted once that
+  tradeoff was pointed out. What actually matters, and is still true:
+  the zone in use is never hidden (`%Z` on every kickoff line), and
+  `--tz`/config `tz` are always there for the rare case where the
+  machine's own zone genuinely isn't what you want.
 - **An `As of:` timestamp on every report** - schedules change (weather,
   doubleheaders, flexed games), so every run states when the data was
   actually fetched, not just what it fetched.

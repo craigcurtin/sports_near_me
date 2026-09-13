@@ -30,10 +30,12 @@ used for every printed kickoff time. Overridden by
 .BR sports-game 's
 .B \-\-tz
 flag. Default:
-.BR UTC \(em
-never guessed from the machine's own clock, since this file can be
-copied to a different machine/location. Set this to see local kickoff
-times.
+.B "the machine's local timezone"
+\(em the zone actually used is always shown (e.g.
+.IR EDT ),
+never hidden. Set this if you want a specific zone regardless of what
+machine runs the command \(em useful if this file gets shared and run
+somewhere else.
 .TP
 .B log_level
 One of \fBDEBUG\fR, \fBINFO\fR, \fBWARNING\fR, \fBERROR\fR,
