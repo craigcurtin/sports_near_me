@@ -2,6 +2,12 @@
 
 Per-platform scripts that run [`sports-game`](CLI.md) without a manual install.
 
+**Python itself must already be installed first** - these scripts bootstrap
+everything *after* that (a virtual environment, this package), but none of
+them installs Python. See the main [README's Prerequisites
+section](../README.md#prerequisites) for how to check and install it on
+macOS, Windows, or Linux.
+
 | Platform | Script |
 |---|---|
 | macOS / Linux | `./scripts/sports-game.sh [args...]` |

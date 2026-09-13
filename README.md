@@ -194,6 +194,43 @@ indication of where the problem is. See
 [docs/EXTENDING.md](docs/EXTENDING.md#failing-loud-every-espn-call-goes-through-fetchpy)
 for how that's wired up, if you're digging into a fix yourself.
 
+## Prerequisites
+
+This is a Python tool. **Before anything else, Python 3.9 or newer needs
+to be installed on the machine that will run it** - the launcher scripts
+below handle everything after that automatically (setting up their own
+environment, installing this package), but none of them can install
+Python itself.
+
+Check whether it's already there:
+
+```bash
+python3 --version   # macOS / Linux
+python --version    # Windows
+```
+
+If that prints `Python 3.9` or higher, skip ahead to Install - nothing
+else to do here.
+
+If it's missing (or too old):
+
+- **macOS**: install from [python.org/downloads](https://www.python.org/downloads/),
+  or `brew install python3` if you use Homebrew. Recent macOS versions
+  don't ship a usable Python by default.
+- **Windows**: install from [python.org/downloads](https://www.python.org/downloads/).
+  **Check "Add python.exe to PATH"** during setup - this is the single
+  most common thing people miss, and without it none of the commands in
+  this README will work from a fresh terminal.
+- **Linux**: almost always already installed - run the `python3 --version`
+  check above to confirm. If it's missing, use your distro's package
+  manager, e.g. `sudo apt install python3 python3-venv` on Debian/Ubuntu
+  (the separate `python3-venv` package matters - some minimal Linux
+  installs leave it out, and the launcher scripts need it) or
+  `sudo dnf install python3` on Fedora.
+
+Once Python itself is confirmed working, everything below - the launcher
+scripts especially - just works.
+
 ## Install
 
 ```bash
@@ -237,9 +274,11 @@ diagnostic detail goes to stderr/a log file.
 
 ## Launcher scripts (for friends who don't want to touch Python)
 
-`scripts/` has one launcher per platform - each bootstraps its own
-`.venv` on first run (creating it and installing this package) and just
-forwards every argument after that:
+Python itself still has to be installed first - see
+[Prerequisites](#prerequisites) above; these scripts handle everything
+after that. `scripts/` has one launcher per platform - each bootstraps
+its own `.venv` on first run (creating it and installing this package)
+and just forwards every argument after that:
 
 | Platform | Script |
 |---|---|
