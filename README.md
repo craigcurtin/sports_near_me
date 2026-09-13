@@ -3,19 +3,22 @@
 When do the teams you follow play next, and can you actually watch or listen?
 
 ```
-$ sports-game nhl blackhawks
-As of: Sunday, September 13, 2026  08:02 AM EDT - schedules can change after this.
+$ sports-game mlb cubs
+As of: Sunday, September 13, 2026  08:30 AM EDT - schedules can change after this.
 
-Game: Chicago Blackhawks at Vegas Golden Knights
-Kickoff: Tuesday, September 29, 2026  10:30 PM EDT
-Venue:   T-Mobile Arena (Las Vegas, NV)
-TV:      ESPN - national broadcast, every market gets this one.
+Game: Chicago Cubs vs. Pittsburgh Pirates
+Kickoff: Sunday, September 13, 2026  02:20 PM EDT
+Venue:   Wrigley Field (Chicago, Illinois)
+TV:      National: MLB.TV (Streaming) | Home broadcast: Marquee Sports Net (TV)  [MLB.TV
+         blacks out both teams' home markets - if you're in one of those two, use the
+         Home/Away channel listed instead.]
 Audio:   None listed in ESPN's data - that's a known gap, not evidence there isn't
          one. Your team's local flagship station/stream almost certainly still
          carries this regionally; check the team's own site/app if you need it.
-         Verified regional flagship: WGN Radio 720 AM - https://wgnradio.com/blackhawks/blackhawks-live/
-         Out-of-market listeners: https://tunein.com/radio/NHL-Radio--Stream-Hockey-Radio-c393481/
-More at: https://www.espn.com/nhl/game/_/gameId/401891775/blackhawks-golden-knights
+         Verified regional flagship: WSCR 670 The Score - https://www.audacy.com/670thescore
+         Out-of-market listeners:
+           MLB Audio subscription: https://www.mlb.com/live-stream-games/subscribe/mlb-audio
+More at: https://www.espn.com/mlb/game/_/gameId/401816929/pirates-cubs
 ```
 
 Ten leagues, one tool: **NFL, MLB, NHL, NCAA football, NCAA men's/women's
@@ -26,6 +29,7 @@ sports-game nfl bears
 sports-game mlb "kansas city royals"
 sports-game ncaaf "ohio state"
 sports-game ncaawb duke
+sports-game ncaamh wisconsin
 ```
 
 Team names resolve loosely - a nickname, city, full name, or abbreviation
@@ -41,15 +45,20 @@ with the teams and conferences you actually follow:
 ```yaml
 follow:
   nfl:
-    teams: [Bears]
+    teams: [Bears, Packers]
   mlb:
     teams: [Cubs]
   ncaaf:
     teams: [Notre Dame]        # independent - not in any conference
-    conferences: [SEC, Big Ten]
-  ncaamb:
-    conferences: [ACC]          # every ACC team, e.g. Duke, UNC, Louisville...
+    conferences: [SEC, Big Ten]   # Big Ten already includes Wisconsin
+  ncaawb:
+    teams: [Wisconsin]
+  ncaamh:
+    teams: [Wisconsin]
 ```
+
+See [`config.example.yaml`](config.example.yaml) for the full example,
+including women's volleyball and men's basketball too.
 
 Then:
 
@@ -83,14 +92,32 @@ conference members.
 - **ESPN's own audio/radio data is confirmed incomplete** - a real Bears
   game came back with zero audio entries despite WBBM actively carrying
   every Bears game under a standing contract. Rather than take that
-  silence at face value, a small **hand-verified table** of real regional
-  flagships (Bears → WBBM, Cubs → WSCR, Blackhawks → WGN, Tennessee → the
-  Vol Network - see `leagues/*.py`'s `KNOWN_AUDIO`) fills the gap for the
-  teams checked so far. It's deliberately partial, not a guess at every
-  team in every league - broadcast rights are real contracts that get
-  renegotiated (the Cubs alone changed flagship stations three times in
-  the last decade), so each entry needs periodic re-verification, not a
-  "set once" assumption.
+  silence at face value, a small **hand-verified table** (`KNOWN_AUDIO`
+  in each `leagues/*.py` module) fills the gap for the teams checked so
+  far:
+
+  | League | Team | Flagship |
+  |---|---|---|
+  | NFL | Bears | WBBM Newsradio 780 AM / 105.9 FM |
+  | NFL | Packers | 95.7 BIG FM (WRIT), Packers Radio Network |
+  | NFL | Vikings | KFAN 100.3 FM (KFXN), Vikings Radio Network |
+  | NFL | Chiefs | 96.5 The Fan (KFNZ) |
+  | NFL | Lions | 97.1 The Ticket (WXYT), Lions Radio Network |
+  | MLB | Cubs | WSCR 670 The Score |
+  | MLB | White Sox | ESPN 1000 AM / 100.3 FM (WMVP) |
+  | NHL | Blackhawks | WGN Radio 720 AM |
+  | NCAA football | Tennessee | Vol Network |
+  | NCAA football, men's/women's basketball, hockey, women's volleyball | Wisconsin | Wisconsin Badgers Sports Network |
+  | NCAA men's/women's basketball, baseball | Tennessee | Vol Network |
+
+  This is deliberately partial, not a guess at every team in every
+  league - broadcast rights are real contracts that get renegotiated
+  (the Cubs alone changed flagship stations three times in the last
+  decade), so each entry needs periodic re-verification, not a "set
+  once" assumption. **Know a team's real flagship that isn't listed
+  here?** Verify it against a real source (the team's own site is
+  usually best) and add it - see [docs/EXTENDING.md](docs/EXTENDING.md)
+  for the pattern.
 - **A separate, standing "out-of-market" list per league** (NFL →
   Westwood One + iHeartRadio, MLB → MLB Audio + the official app, NHL →
   TuneIn's NHL page) - useful because a team's own local stream can
@@ -125,6 +152,17 @@ collisions - confirmed `.../teams/osu/schedule` silently answers with a
 small branch-campus team, not Ohio State), and if an id ever changed, the
 next run just resolves against whatever's current. There's no stale
 mapping anywhere to go wrong.
+
+## If something breaks
+
+ESPN's API isn't under this project's control, and it has already
+changed shape more than once while building this tool. If a fetch ever
+fails - a stale id, a renamed field, ESPN's API being down - the error
+message names the exact URL involved, what the tool was trying to do,
+and which file likely needs a look, instead of a bare traceback with no
+indication of where the problem is. See
+[docs/EXTENDING.md](docs/EXTENDING.md#failing-loud-every-espn-call-goes-through-fetchpy)
+for how that's wired up, if you're digging into a fix yourself.
 
 ## Install
 
