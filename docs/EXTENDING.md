@@ -8,6 +8,8 @@ up later without the context of building it.
 
 ```
 sports_near_me/
+  fetch.py           shared HTTP+JSON fetch - DataSourceError, fetch_json(),
+                      parse_error() - see "Failing loud" below
   espn.py            generic schedule fetch - Game/Broadcast dataclasses,
                       next_game()/game_for_week(), the season-retry guard
   resolve.py          generic "name -> one Team, or a clear ambiguity error"
@@ -35,6 +37,58 @@ implementation is a hardcoded table or a live API call:
 - `broadcast_note(game) -> str`
 - `resolve_conf(query) -> Team` (NCAA only - `hasattr()`-checked in cli.py)
 - `conf_members(conference_id) -> list[Team]` (NCAA only)
+
+## Failing loud: every ESPN call goes through `fetch.py`
+
+ESPN's API is not under this project's control, and it has already
+changed shape on us more than once while building this (NCAA
+abbreviation routing collisions, the season-parameter inconsistency, a
+school's numeric id differing per sport). A stale id, a renamed JSON
+field, or an endpoint that starts 404ing needs to be diagnosable from the
+error message alone - nobody should have to re-derive "which URL, which
+file, which field" from a bare traceback.
+
+**The rule for any new fetch code: never call `urllib`/`json` directly.**
+Go through `fetch.py`'s two pieces instead:
+
+- **`fetch_json(url, context)`** - wraps the HTTP request and JSON
+  parse. Any failure (unreachable host, non-2xx response, invalid JSON)
+  raises `DataSourceError` naming the URL, `context` (a short string
+  describing what this call was trying to do - "fetching nfl schedule
+  for team_id=CHI"), and a pointer to which kind of file usually builds
+  that URL (a `leagues/*.py` module, `dynamic_teams.py`, or
+  `conferences.py`).
+- **`parse_error(context, url, exception)`** - call this at the point a
+  `KeyError`/`IndexError`/`TypeError` fires while walking an
+  *already-parsed* JSON dict (`fetch_json` succeeded, but the shape
+  wasn't what the code expected - a renamed/removed field). Wrap your
+  parsing loop's body in `try: ... except (KeyError, IndexError,
+  TypeError) as e: raise parse_error(context, url, e) from e` - see
+  `espn.py`'s `_parse_events()` for the pattern.
+
+Both keep the original exception chained (`from e`), so `__cause__`
+still has the raw traceback for anyone who wants it - the wrapping adds
+a breadcrumb, it doesn't hide anything.
+
+**In `cli.py`**, every call site that can reach one of these (fetching a
+schedule, resolving a team/conference name) catches `DataSourceError`
+specifically and routes it through `_report_data_source_error()`, which
+does two things: logs the full traceback (`logger.exception`, reaches
+`--log-dir` if set) and prints the breadcrumb message itself to stderr
+via `print(f"error: {e}", ...)` - so the actionable summary is always on
+screen, not only in a log file someone has to go find. A genuinely
+unexpected exception (a real bug, not a data-source problem) still gets
+caught and logged, but is labeled "unexpected failure," not folded into
+the same message shape - the two are worth telling apart on sight.
+
+If you add a new module that calls an ESPN endpoint directly, route it
+through `fetch_json()`/`parse_error()` the same way, and add a
+`DataSourceError` catch at whatever `cli.py` call site reaches it. Tests
+for the wrapping behavior itself (not just "it still works") live in
+`tests/test_fetch.py`, `tests/test_dynamic_teams.py`, and
+`tests/test_conferences.py` - follow that pattern (mock `fetch_json` to
+return a malformed-but-valid dict, assert the raised `DataSourceError`'s
+message names the right context) for anything new.
 
 ## Adding a pro league with a fixed team count (NBA, WNBA, MLS, ...)
 

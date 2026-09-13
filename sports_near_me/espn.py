@@ -22,11 +22,11 @@ writing the fix (see the project's session history, not repeated here):
    _has_upcoming_event()'s docstring for why that guard exists.
 """
 
-import json
-import urllib.request
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
+
+from .fetch import fetch_json, parse_error
 
 SCHEDULE_URL = "https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams/{team_id}/schedule"
 
@@ -64,11 +64,6 @@ class Game:
         return self.away_name if self.is_home_for(team_id) else self.home_name
 
 
-def _fetch_raw(url: str) -> dict:
-    with urllib.request.urlopen(url, timeout=10) as response:
-        return json.load(response)
-
-
 def _has_upcoming_event(data: dict) -> bool:
     now = datetime.now(timezone.utc)
     for event in data.get("events", []):
@@ -79,6 +74,69 @@ def _has_upcoming_event(data: dict) -> bool:
         if kickoff >= now:
             return True
     return False
+
+
+def _parse_events(data: dict, url: str, context: str) -> list:
+    """Turns one already-fetched schedule response into Game objects.
+    Split out from fetch_schedule() so a shape-mismatch here is both
+    independently testable (no network mocking needed) and reported with
+    a breadcrumb naming the URL and context, via parse_error() - a bare
+    KeyError/IndexError/TypeError three frames into a dict-walk is exactly
+    the kind of failure this project wants to never leave unexplained."""
+    try:
+        games = []
+        for event in data.get("events", []):
+            competition = event["competitions"][0]
+            venue = competition.get("venue", {})
+            address = venue.get("address", {})
+
+            home_id = home_abbr = home_name = away_id = away_abbr = away_name = None
+            for competitor in competition.get("competitors", []):
+                team = competitor["team"]
+                name = team.get("displayName") or team.get("name", "")
+                abbr = team.get("abbreviation", "")
+                if competitor["homeAway"] == "home":
+                    home_id, home_abbr, home_name = team["id"], abbr, name
+                else:
+                    away_id, away_abbr, away_name = team["id"], abbr, name
+
+            broadcasts = [
+                Broadcast(
+                    network=b["media"]["shortName"],
+                    medium=b["type"]["shortName"],
+                    market_type=b["market"]["type"],
+                )
+                for b in competition.get("broadcasts", [])
+            ]
+
+            link = None
+            for entry in event.get("links", []):
+                rel = entry.get("rel", [])
+                if "summary" in rel and "desktop" in rel:
+                    link = entry.get("href")
+                    break
+
+            games.append(Game(
+                event_id=event["id"],
+                name=event["name"],
+                kickoff_utc=datetime.strptime(event["date"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc),
+                week=event.get("week", {}).get("number"),
+                home_id=home_id,
+                away_id=away_id,
+                home_abbr=home_abbr,
+                away_abbr=away_abbr,
+                home_name=home_name,
+                away_name=away_name,
+                venue_name=venue.get("fullName", ""),
+                venue_city=address.get("city", ""),
+                venue_state=address.get("state", ""),
+                link=link,
+                broadcasts=broadcasts,
+                completed=competition.get("status", {}).get("type", {}).get("completed", False),
+            ))
+        return games
+    except (KeyError, IndexError, TypeError) as e:
+        raise parse_error(context, url, e) from e
 
 
 def fetch_schedule(sport: str, league: str, team_id: str) -> list:
@@ -94,69 +152,37 @@ def fetch_schedule(sport: str, league: str, team_id: str) -> list:
     as if it were current (Duke men's basketball's already-finished
     2025-26 season, under season=2026) - worse than the honest empty
     result it was "fixing." If neither guess turns up anything upcoming,
-    that's reported as-is: the schedule genuinely isn't published yet."""
-    url = SCHEDULE_URL.format(sport=sport, league=league, team_id=team_id)
-    data = _fetch_raw(url)
+    that's reported as-is: the schedule genuinely isn't published yet.
 
-    if not _has_upcoming_event(data):
+    Any failure - unreachable URL, a non-2xx response, invalid JSON, or
+    JSON that doesn't have the shape expected below - raises
+    fetch.DataSourceError with the URL and what was being attempted, so
+    the failure is never a bare traceback with no indication of where to
+    look (see fetch.py's docstring)."""
+    context = f"fetching {sport}/{league} schedule for team_id={team_id}"
+    url = SCHEDULE_URL.format(sport=sport, league=league, team_id=team_id)
+    data = fetch_json(url, context)
+
+    try:
+        needs_retry = not _has_upcoming_event(data)
+    except (KeyError, IndexError, TypeError) as e:
+        raise parse_error(context, url, e) from e
+
+    if needs_retry:
         today = date.today()
         for season in (today.year, today.year + 1):
-            candidate = _fetch_raw(f"{url}?season={season}")
-            if _has_upcoming_event(candidate):
+            season_url = f"{url}?season={season}"
+            candidate = fetch_json(season_url, f"{context} (season={season} retry)")
+            try:
+                found = _has_upcoming_event(candidate)
+            except (KeyError, IndexError, TypeError) as e:
+                raise parse_error(f"{context} (season={season} retry)", season_url, e) from e
+            if found:
                 data = candidate
+                url = season_url
                 break
 
-    games = []
-    for event in data.get("events", []):
-        competition = event["competitions"][0]
-        venue = competition.get("venue", {})
-        address = venue.get("address", {})
-
-        home_id = home_abbr = home_name = away_id = away_abbr = away_name = None
-        for competitor in competition.get("competitors", []):
-            team = competitor["team"]
-            name = team.get("displayName") or team.get("name", "")
-            abbr = team.get("abbreviation", "")
-            if competitor["homeAway"] == "home":
-                home_id, home_abbr, home_name = team["id"], abbr, name
-            else:
-                away_id, away_abbr, away_name = team["id"], abbr, name
-
-        broadcasts = [
-            Broadcast(
-                network=b["media"]["shortName"],
-                medium=b["type"]["shortName"],
-                market_type=b["market"]["type"],
-            )
-            for b in competition.get("broadcasts", [])
-        ]
-
-        link = None
-        for entry in event.get("links", []):
-            rel = entry.get("rel", [])
-            if "summary" in rel and "desktop" in rel:
-                link = entry.get("href")
-                break
-
-        games.append(Game(
-            event_id=event["id"],
-            name=event["name"],
-            kickoff_utc=datetime.strptime(event["date"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc),
-            week=event.get("week", {}).get("number"),
-            home_id=home_id,
-            away_id=away_id,
-            home_abbr=home_abbr,
-            away_abbr=away_abbr,
-            home_name=home_name,
-            away_name=away_name,
-            venue_name=venue.get("fullName", ""),
-            venue_city=address.get("city", ""),
-            venue_state=address.get("state", ""),
-            link=link,
-            broadcasts=broadcasts,
-            completed=competition.get("status", {}).get("type", {}).get("completed", False),
-        ))
-    return games
+    return _parse_events(data, url, context)
 
 
 def next_game(games: list, now: Optional[datetime] = None) -> Optional[Game]:

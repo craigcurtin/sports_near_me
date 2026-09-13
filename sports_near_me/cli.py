@@ -5,7 +5,19 @@ from zoneinfo import ZoneInfo
 
 from .cli_common import add_shared_flags, configure_logging, logger, resolve_settings
 from .espn import audio_note, fetch_schedule, game_for_week, games_within, next_game
+from .fetch import DataSourceError
 from .leagues import LEAGUES
+
+
+def _report_data_source_error(e: DataSourceError) -> None:
+    """The single place a DataSourceError becomes user-facing output -
+    every call site below routes through this so the breadcrumb (URL,
+    what was being attempted, where to look - see fetch.py) always
+    reaches the terminal, not just the log file. Full traceback still
+    goes to the log via logger.exception, for the rarer case where the
+    breadcrumb itself isn't enough."""
+    logger.exception("Data source failure")
+    print(f"error: {e}", file=sys.stderr)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -106,9 +118,19 @@ def _format_game(league, team, game, display_tz) -> None:
 def _print_team(league, team, settings) -> None:
     try:
         games = fetch_schedule(league.SPORT, league.LEAGUE, team.id)
+    except DataSourceError as e:
+        _report_data_source_error(e)
+        return
     except Exception:
-        logger.exception(f"Failed to fetch schedule for {team.display_name}")
-        print(f"error: couldn't fetch {team.display_name}'s schedule.", file=sys.stderr)
+        # Not a recognized data-source failure - an actual bug somewhere
+        # in this codebase, not ESPN's API changing shape. Still surfaced
+        # loudly (full traceback to the log) rather than silently eaten,
+        # but without pretending to know where to look the way a
+        # DataSourceError's breadcrumb does.
+        logger.exception(f"Unexpected failure fetching schedule for {team.display_name}")
+        print(f"error: unexpected failure fetching {team.display_name}'s schedule - "
+              f"see the log for the full traceback; this doesn't look like a known "
+              f"ESPN data-source issue.", file=sys.stderr)
         return
     logger.info(f"Fetched {len(games)} game(s) for {team.display_name}")
 
@@ -168,12 +190,18 @@ def run(argv=None) -> int:
             except ValueError as e:
                 print(f"error: {e}", file=sys.stderr)
                 return 1
+            except DataSourceError as e:
+                _report_data_source_error(e)
+                return 1
             continue
 
         try:
             teams = _followed_teams_for(sport, settings["_follow"])
         except ValueError as e:
             print(f"error: {e}", file=sys.stderr)
+            return 1
+        except DataSourceError as e:
+            _report_data_source_error(e)
             return 1
         if not teams:
             print(f"error: no team given for {sport}, and nothing under follow.{sport} in your "

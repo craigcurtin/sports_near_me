@@ -1,7 +1,14 @@
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from sports_near_me.espn import Broadcast, Game, _has_upcoming_event, audio_note, game_for_week, games_within, next_game
+import pytest
+
+from sports_near_me.espn import (
+    Broadcast, Game, _has_upcoming_event, _parse_events, audio_note,
+    fetch_schedule, game_for_week, games_within, next_game,
+)
+from sports_near_me.fetch import DataSourceError
 
 
 def _raw_event(iso_date, completed=False):
@@ -149,3 +156,52 @@ def test_games_within_sorted_by_kickoff():
     ]
     result = games_within(games, days=3, tz=timezone.utc, now=now)
     assert [g.event_id for g in result] == ["earlier", "later"]
+
+
+def _valid_event(event_id="1"):
+    return {
+        "id": event_id, "name": "Test", "date": "2026-09-13T17:00Z",
+        "week": {"number": 1}, "links": [],
+        "competitions": [{
+            "venue": {"fullName": "Test Stadium", "address": {"city": "Test City", "state": "TS"}},
+            "competitors": [
+                {"homeAway": "home", "team": {"id": "1", "abbreviation": "HOM", "displayName": "Home Team"}},
+                {"homeAway": "away", "team": {"id": "2", "abbreviation": "AWY", "displayName": "Away Team"}},
+            ],
+            "broadcasts": [],
+            "status": {"type": {"completed": False}},
+        }],
+    }
+
+
+def test_parse_events_happy_path():
+    data = {"events": [_valid_event()]}
+    games = _parse_events(data, "https://example.test/schedule", "testing")
+    assert len(games) == 1
+    assert games[0].home_name == "Home Team"
+
+
+def test_parse_events_missing_field_raises_data_source_error_with_breadcrumb():
+    # "competitions" missing entirely - exactly what an ESPN-side rename
+    # of that field would look like.
+    bad_event = _valid_event()
+    del bad_event["competitions"]
+    data = {"events": [bad_event]}
+    with pytest.raises(DataSourceError) as exc_info:
+        _parse_events(data, "https://example.test/schedule", "testing schedule")
+    message = str(exc_info.value)
+    assert "https://example.test/schedule" in message
+    assert "testing schedule" in message
+    assert "KeyError" in message
+
+
+def test_fetch_schedule_propagates_data_source_error_with_breadcrumb():
+    # fetch_json itself is mocked here, not urllib - this test is about
+    # fetch_schedule()'s own context string reaching the final error, not
+    # re-testing fetch_json's HTTP-layer wrapping (see test_fetch.py).
+    with patch("sports_near_me.espn.fetch_json", return_value={"events": "not-a-list-of-dicts-but-a-string"}):
+        with pytest.raises(DataSourceError) as exc_info:
+            fetch_schedule("football", "nfl", "CHI")
+    message = str(exc_info.value)
+    assert "football/nfl" in message
+    assert "team_id=CHI" in message

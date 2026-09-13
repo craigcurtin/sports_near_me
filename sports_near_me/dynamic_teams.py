@@ -11,9 +11,7 @@ changed a school's id, the next run just resolves the name against
 whatever id is current - there's no stale mapping anywhere to go wrong.
 """
 
-import json
-import urllib.request
-
+from .fetch import fetch_json, parse_error
 from .resolve import Team
 
 TEAMS_URL = "https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams?limit=1000"
@@ -25,23 +23,32 @@ _cache = {}
 
 
 def fetch_all_teams(sport: str, league: str) -> list:
+    """Every team in this sport/league, fetched fresh (subject to the
+    per-process cache above). Any failure - unreachable URL, non-2xx
+    response, invalid JSON, or JSON missing the shape expected below -
+    raises fetch.DataSourceError naming the URL and what was being
+    attempted, rather than a bare KeyError with no indication of where
+    to look."""
     key = (sport, league)
     if key not in _cache:
         url = TEAMS_URL.format(sport=sport, league=league)
-        with urllib.request.urlopen(url, timeout=10) as response:
-            data = json.load(response)
-        raw = data["sports"][0]["leagues"][0]["teams"]
-        _cache[key] = [
-            Team(
-                id=t["team"]["id"],
-                display_name=t["team"]["displayName"],
-                search_keys=(
-                    t["team"].get("abbreviation", "").lower(),
-                    t["team"].get("name", "").lower(),
-                    t["team"].get("location", "").lower(),
-                    t["team"]["displayName"].lower(),
-                ),
-            )
-            for t in raw
-        ]
+        context = f"fetching {sport}/{league} team list"
+        data = fetch_json(url, context)
+        try:
+            raw = data["sports"][0]["leagues"][0]["teams"]
+            _cache[key] = [
+                Team(
+                    id=t["team"]["id"],
+                    display_name=t["team"]["displayName"],
+                    search_keys=(
+                        t["team"].get("abbreviation", "").lower(),
+                        t["team"].get("name", "").lower(),
+                        t["team"].get("location", "").lower(),
+                        t["team"]["displayName"].lower(),
+                    ),
+                )
+                for t in raw
+            ]
+        except (KeyError, IndexError, TypeError) as e:
+            raise parse_error(context, url, e) from e
     return _cache[key]
