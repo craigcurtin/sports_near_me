@@ -50,6 +50,15 @@ ncaabsb = NcaaLeague("baseball", "college-baseball", "NCAA baseball", known_audi
 ncaamh = NcaaLeague("hockey", "mens-college-hockey", "NCAA men's hockey", known_audio=_NCAAMH_KNOWN_AUDIO)
 ncaavbw = NcaaLeague("volleyball", "womens-college-volleyball", "NCAA women's volleyball", known_audio=_NCAAVBW_KNOWN_AUDIO)
 ncaavbm = NcaaLeague("volleyball", "mens-college-volleyball", "NCAA men's volleyball")
+# Soccer is the one NCAA sport checked so far whose ESPN league slug
+# doesn't follow the "{gender}-college-{sport}" pattern every other NCAA
+# sport here uses - it's "usa.ncaa.w.1"/"usa.ncaa.m.1" instead, the same
+# competition-slug style ESPN uses for pro soccer leagues. Verified live
+# (curl) before wiring in, per EXTENDING.md's "verify the sport/league
+# path segments first" rule - both return real team lists (417 women's,
+# 270 men's) and a real schedule for a real team id.
+ncaawsoc = NcaaLeague("soccer", "usa.ncaa.w.1", "NCAA women's soccer")
+ncaamsoc = NcaaLeague("soccer", "usa.ncaa.m.1", "NCAA men's soccer")
 
 # Registry every CLI subcommand and the follow-list config resolve against.
 # Order here is the order subcommands are listed in --help.
@@ -64,4 +73,6 @@ LEAGUES = {
     "ncaamh": ncaamh,     # NCAA men's hockey
     "ncaavbw": ncaavbw,   # NCAA women's volleyball
     "ncaavbm": ncaavbm,   # NCAA men's volleyball
+    "ncaawsoc": ncaawsoc,  # NCAA women's soccer
+    "ncaamsoc": ncaamsoc,  # NCAA men's soccer
 }

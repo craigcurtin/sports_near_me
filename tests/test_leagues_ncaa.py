@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from sports_near_me.leagues import ncaabsb, ncaaf, ncaamb, ncaamh, ncaavbm, ncaavbw, ncaawb
+from sports_near_me.leagues import LEAGUES, ncaabsb, ncaaf, ncaamb, ncaamh, ncaamsoc, ncaavbm, ncaavbw, ncaawb, ncaawsoc
 from sports_near_me.leagues._ncaa import NcaaLeague
 from sports_near_me.resolve import Team
 
@@ -72,3 +72,23 @@ def test_known_audio_wisconsin_has_no_mens_volleyball_entry():
     # volleyball power, not a men's program, so there's nothing true to
     # verify and add here.
     assert ncaavbm.known_audio("275") is None
+
+
+def test_soccer_leagues_registered_with_espns_actual_slugs():
+    # Soccer is the one NCAA sport whose ESPN league slug doesn't follow
+    # the "{gender}-college-{sport}" pattern every other sport here uses -
+    # verified live (see leagues/__init__.py) against
+    # apis/site/v2/sports/soccer/usa.ncaa.{w,m}.1/teams, which returned
+    # real team lists (417 women's, 270 men's).
+    assert ncaawsoc.SPORT == "soccer" and ncaawsoc.LEAGUE == "usa.ncaa.w.1"
+    assert ncaamsoc.SPORT == "soccer" and ncaamsoc.LEAGUE == "usa.ncaa.m.1"
+    assert LEAGUES["ncaawsoc"] is ncaawsoc
+    assert LEAGUES["ncaamsoc"] is ncaamsoc
+
+
+def test_soccer_resolve_not_found_names_the_right_sport():
+    fake_teams = [Team(id="1", display_name="East Tennessee State", search_keys=("etsu", "east tennessee state"))]
+    with patch("sports_near_me.leagues._ncaa.fetch_all_teams", return_value=fake_teams):
+        with pytest.raises(ValueError,
+                            match=r"ESPN's NCAA men's soccer data doesn't have a team called 'Wisconsin'"):
+            ncaamsoc.resolve_team("Wisconsin")

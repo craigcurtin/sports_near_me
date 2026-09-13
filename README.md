@@ -41,8 +41,9 @@ A single run can look up several teams at once - `cubs,brewers`,
 `cubs brewers` (no comma at all) all work identically. Quoting is never
 required, just occasionally convenient.
 
-Ten leagues, one tool: **NFL, MLB, NHL, NCAA football, NCAA men's/women's
-basketball, NCAA baseball, NCAA men's hockey, NCAA men's/women's volleyball.**
+Twelve leagues, one tool: **NFL, MLB, NHL, NCAA football, NCAA men's/women's
+basketball, NCAA baseball, NCAA men's hockey, NCAA men's/women's volleyball,
+NCAA men's/women's soccer.**
 
 ```bash
 sports-game nfl bears
@@ -287,7 +288,7 @@ sports-game <sport> <team> [options]
 
 **Sport** is required whenever you're looking up a specific team:
 `nfl`, `mlb`, `nhl`, `ncaaf`, `ncaamb`, `ncaawb`, `ncaabsb`, `ncaamh`,
-`ncaavbw`, `ncaavbm`.
+`ncaavbw`, `ncaavbm`, `ncaawsoc`, `ncaamsoc`.
 
 **Team is optional, and can be more than one team.** Leave it off
 entirely to use your config's follow list for that sport (see above).

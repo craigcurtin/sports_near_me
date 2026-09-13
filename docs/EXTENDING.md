@@ -20,7 +20,7 @@ sports_near_me/
   leagues/
     nfl.py, mlb.py, nhl.py     static 30-32 team tables (abbreviations
                                 route directly - no numeric-id lookup needed)
-    _ncaa.py                    ONE shared implementation for all six NCAA
+    _ncaa.py                    ONE shared implementation for all eight NCAA
                                 sports - see "Adding an NCAA sport" below
     __init__.py                  the LEAGUES registry every CLI subcommand
                                 and the config's follow list resolve against
@@ -113,14 +113,14 @@ Home/Away broadcast split, no NFL-style regional-window caveat):
 5. Add it to `add_shared_flags`'s subparser loop - nothing to do, that
    loop already iterates `LEAGUES`.
 
-## Adding an NCAA sport (soccer, lacrosse, wrestling, ...)
+## Adding an NCAA sport (lacrosse, wrestling, ...)
 
-This is now a two-line addition, not a new file:
+This is a two-line addition, not a new file:
 
 ```python
 # leagues/__init__.py
-ncaasoc = NcaaLeague("soccer", "mens-college-soccer")
-LEAGUES["ncaasoc"] = ncaasoc
+ncaalax = NcaaLeague("lacrosse", "mens-college-lacrosse", "NCAA men's lacrosse")
+LEAGUES["ncaalax"] = ncaalax
 ```
 
 `_ncaa.py`'s `NcaaLeague` already handles team resolution (dynamic, via
@@ -133,7 +133,15 @@ answer that's genuinely correct for every NCAA sport checked so far).
 and confirm it returns real teams before wiring it in. ESPN's naming isn't
 fully predictable (`mens-college-basketball` and `college-baseball` don't
 follow the same pattern; volleyball needed both `mens-college-volleyball`
-and `womens-college-volleyball` checked separately).
+and `womens-college-volleyball` checked separately). **Soccer is the
+extreme case** - it doesn't follow the `{gender}-college-{sport}` pattern
+at all. Guessing `mens-college-soccer`/`womens-college-soccer` (by analogy
+with basketball/volleyball) returns a 404; the real slugs are
+`usa.ncaa.m.1`/`usa.ncaa.w.1`, the same competition-slug style ESPN uses
+for pro soccer leagues - found only by actually curling it, which is
+exactly why this rule exists. Don't extrapolate a new sport's slug from
+an existing one without checking; confirm each sport/gender combination
+separately.
 
 ## Two real bugs found building this - don't reintroduce them
 

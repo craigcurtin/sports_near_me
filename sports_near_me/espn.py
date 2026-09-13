@@ -104,7 +104,14 @@ def _parse_events(data: dict, url: str, context: str) -> list:
                 Broadcast(
                     network=b["media"]["shortName"],
                     medium=b["type"]["shortName"],
-                    market_type=b["market"]["type"],
+                    # Unlike MLB, which always reports Home/Away/National,
+                    # some broadcast entries carry no "market" at all - seen
+                    # live on an NCAA soccer conference-network stream
+                    # (B1G+). Absent, not malformed: NCAA's own
+                    # broadcast_note() doesn't read market_type anyway (see
+                    # leagues/_ncaa.py), so this is safe to leave blank
+                    # rather than treat as a parse failure.
+                    market_type=b.get("market", {}).get("type", ""),
                 )
                 for b in competition.get("broadcasts", [])
             ]

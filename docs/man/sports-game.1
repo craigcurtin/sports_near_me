@@ -82,6 +82,13 @@ NCAA women's volleyball
 .TP
 .B ncaavbm
 NCAA men's volleyball
+.TP
+.B ncaawsoc
+NCAA women's soccer
+.TP
+.B ncaamsoc
+NCAA men's soccer \(em far fewer schools sponsor this than women's
+soccer. See the caution below.
 .PP
 Every NCAA sport supports following a whole conference (see
 .BR sports_near_me.yaml (5))
@@ -89,6 +96,20 @@ Every NCAA sport supports following a whole conference (see
 ESPN's live team/conference lists on every run, not a hardcoded table,
 since a handful of hundred-plus-school sports would be impractical to
 hand-maintain and conference realignment does happen.
+.PP
+.B Caution for ncaamsoc:
+if your school doesn't field a men's soccer team, a lookup for it does
+not reliably fail. For example,
+.B "sports-game ncaamsoc tennessee"
+does not error \(em it silently resolves to
+.B "East Tennessee State"
+instead, because that is the only men's-soccer school whose name happens
+to contain "tennessee," and team matching falls back to a unique
+substring match when there is no exact one.
+.B \-\-explain
+will not catch this either, since it never resolves team names by
+design \(em check the actual team name in the report itself, not just
+that the command succeeded.
 .SH OPTIONS
 .TP
 .BI \-\-config " path"

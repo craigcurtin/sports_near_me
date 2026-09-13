@@ -53,6 +53,19 @@ lookup with a clear error, rather than silently skipping it.
 | `ncaamh` | NCAA men's hockey |
 | `ncaavbw` | NCAA women's volleyball |
 | `ncaavbm` | NCAA men's volleyball |
+| `ncaawsoc` | NCAA women's soccer |
+| `ncaamsoc` | NCAA men's soccer — far fewer schools sponsor this than women's soccer (e.g. Tennessee has no men's team at all) |
+
+**A word of caution for `ncaamsoc` specifically:** if your school doesn't
+field a men's soccer team, a query for it doesn't reliably fail the way
+you'd expect. `sports-game ncaamsoc tennessee` doesn't error — it silently
+resolves to **East Tennessee State** instead, because that's the only
+men's-soccer school whose name happens to *contain* "tennessee", and team
+matching falls back to a unique substring match when there's no exact one
+(see [Options](#options) for `--explain`, which won't catch this either —
+it never resolves team names, by design). If a team you add under this
+sport doesn't look right, double-check the actual report's team name, not
+just that the command succeeded.
 
 Every NCAA sport supports following a whole conference (see
 [CONFIG.md](CONFIG.md)) — team and conference names for NCAA sports are

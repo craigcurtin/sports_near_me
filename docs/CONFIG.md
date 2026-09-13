@@ -33,8 +33,8 @@ the full walkthrough.
 ## The follow list
 
 `follow` is a mapping from sport key (`nfl`, `mlb`, `nhl`, `ncaaf`,
-`ncaamb`, `ncaawb`, `ncaabsb`, `ncaamh`, `ncaavbw`, `ncaavbm` — see
-[CLI.md](CLI.md#sports)) to an object with either or both of:
+`ncaamb`, `ncaawb`, `ncaabsb`, `ncaamh`, `ncaavbw`, `ncaavbm`, `ncaawsoc`,
+`ncaamsoc` — see [CLI.md](CLI.md#sports)) to an object with either or both of:
 
 - **`teams`** — a list of team names, in the same loose form `sports-game`
   accepts on the command line (nickname, city, full name, or abbreviation).

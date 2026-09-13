@@ -29,7 +29,11 @@ follow:
     teams: [Wisconsin]
   ncaavbw:
     teams: [Wisconsin, Tennessee]          # women's volleyball - Wisconsin doesn't field a men's team
-  # ncaabsb, ncaavbm work the same way (teams: / conferences:)
+  ncaawsoc:
+    teams: [Tennessee]
+  # ncaabsb, ncaavbm, ncaamsoc work the same way (teams: / conferences:) -
+  # ncaamsoc specifically: check who actually fields a team before adding
+  # one, since far fewer schools sponsor men's soccer (see CLI.md)
 
 # Run "sports-game" alone to see every team/conference above, one game each.
 # Run "sports-game ncaaf" to see just the NCAA football list.
